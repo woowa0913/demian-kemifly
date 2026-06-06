@@ -87,7 +87,7 @@ function drawMenu(ctx, state, assets) {
   const logoY = view.portrait ? 132 : 104;
   const birdY = view.portrait ? 330 : 285;
   const startY = view.portrait ? 540 : 318;
-  drawImageCentered(ctx, assets.happy, cx, birdY, view.portrait ? 136 : 106, view.portrait ? 122 : 94);
+  drawMenuKemi(ctx, state, assets, cx, birdY, view);
   drawImageCentered(ctx, assets.logo, cx, logoY, view.portrait ? 330 : 300, view.portrait ? 174 : 158);
   label(ctx, "케미의 첫 비행", cx, view.portrait ? 236 : 196, view.portrait ? 25 : 23, "#8cf6ff", "800", "center");
   button(ctx, state, "start", "START", cx - 132, startY, 264, 68);
@@ -95,6 +95,28 @@ function drawMenu(ctx, state, assets) {
   if (view.portrait) smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", cx - 70, startY + 170, 140, 44);
   else smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", view.width - 172, 34, 134, 42);
   label(ctx, view.portrait ? "TAP TO FLY" : "SPACE / TAP", cx, view.portrait ? startY + 244 : 505, 15, "#d9fbff", "700", "center");
+}
+
+function drawMenuKemi(ctx, state, assets, x, y, view) {
+  const time = state.clock || 0;
+  const frame = (Math.floor(time * 5.5) % 3) + 1;
+  const image = assets[`kemiLv3Frame${frame}`] || assets.kemi2 || assets.happy;
+  const floatY = Math.sin(time * 2.2) * 8;
+  const driftX = Math.cos(time * 1.4) * 4;
+  const scalePulse = 1 + Math.sin(time * 4.4) * 0.025;
+  const w = (view.portrait ? 148 : 118) * scalePulse;
+  const h = (view.portrait ? 118 : 94) * scalePulse;
+
+  ctx.save();
+  ctx.translate(x + driftX, y + floatY);
+  ctx.rotate(Math.sin(time * 1.8) * 0.045);
+  ctx.shadowColor = "rgba(56, 232, 255, 0.42)";
+  ctx.shadowBlur = 18;
+  drawImageCentered(ctx, image, 0, 0, w, h);
+  ctx.shadowBlur = 0;
+  drawWingSpark(ctx, time, -w * 0.42, -h * 0.08);
+  drawWingSpark(ctx, time + 1.2, w * 0.4, -h * 0.12);
+  ctx.restore();
 }
 
 function drawPause(ctx, state) {
@@ -246,6 +268,25 @@ function drawButtonDiamond(ctx, x, y, size) {
   grad.addColorStop(0.52, "#38e8ff");
   grad.addColorStop(1, "#034f9f");
   roundRect(ctx, -size / 2, -size / 2, size, size, 2, grad, "#ffffff");
+  ctx.restore();
+}
+
+function drawWingSpark(ctx, time, x, y) {
+  const pulse = 0.45 + Math.sin(time * 5.2) * 0.28;
+  ctx.save();
+  ctx.globalAlpha = Math.max(0.12, pulse);
+  ctx.strokeStyle = "rgba(154, 247, 255, 0.72)";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(x - 5, y);
+  ctx.lineTo(x + 5, y);
+  ctx.moveTo(x, y - 5);
+  ctx.lineTo(x, y + 5);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(255, 215, 107, 0.65)";
+  ctx.beginPath();
+  ctx.arc(x + 9, y - 10, 1.8, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }
 

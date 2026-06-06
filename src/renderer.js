@@ -70,7 +70,6 @@ function drawMenu(ctx, state, assets, introVideo) {
   if (view.portrait) smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", cx - 70, startY + 170, 140, 44);
   else smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", view.width - 172, 34, 134, 42);
   label(ctx, view.portrait ? "TAP TO FLY" : "SPACE / TAP", cx, view.portrait ? startY + 244 : 505, 15, "#d9fbff", "700", "center");
-  drawLegend(ctx, view, startY + (view.portrait ? 300 : -266));
 }
 
 function drawIntroFrame(ctx, video, view) {
@@ -106,19 +105,6 @@ function drawGameOver(ctx, state, assets) {
   label(ctx, state.isRecord ? prompt : state.message, cx, panelY + 126, 17, "#ffd76b", "800", "center");
   button(ctx, state, state.isRecord && !state.saved ? "save" : "restart", state.isRecord && !state.saved ? "기록 저장" : "RETRY", cx - 136, buttonY, 272, 62);
   button(ctx, state, "hall", "명예의 전당", cx - 136, buttonY + 76, 272, 58);
-}
-
-function drawLegend(ctx, view, y) {
-  if (!view.portrait) {
-    drawPanel(ctx, 38, 118, 200, 94, 0.42);
-    label(ctx, "+ 링 = 수집", 62, 150, 15, "#78ffca", "900");
-    label(ctx, "! 링 = 회피", 62, 184, 15, "#ff8585", "900");
-    return;
-  }
-  drawPanel(ctx, 54, y, view.width - 108, 86, 0.42);
-  label(ctx, "+ 링은 먹고", view.width / 2 - 78, y + 34, 16, "#78ffca", "900", "center");
-  label(ctx, "! 링은 피해요", view.width / 2 + 80, y + 34, 16, "#ff8585", "900", "center");
-  label(ctx, "근접 회피와 미션으로 피버를 채우세요", view.width / 2, y + 64, 13, "#d9fbff", "800", "center");
 }
 
 function drawHall(ctx, state) {

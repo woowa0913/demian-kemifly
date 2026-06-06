@@ -76,8 +76,8 @@ function pickPairedObstacle(state, base) {
 }
 
 function shouldSpawnPattern(state) {
-  if (state.time < 15) return false;
-  const pressure = state.map === "lava" ? 0.5 : Math.min(0.34, state.time / 140);
+  if (state.time < 12) return false;
+  const pressure = state.map === "lava" ? 0.56 : Math.min(0.39, state.time / 125);
   return secureRange(0, 1) < pressure;
 }
 

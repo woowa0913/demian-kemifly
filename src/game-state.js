@@ -205,7 +205,7 @@ function updateSpawns(state, dt) {
   state.itemTimer -= dt;
   if (state.spawnTimer <= 0) {
     spawnObstacle(state);
-    state.spawnTimer = Math.max(0.56, GAME.spawnEvery - state.time * 0.008);
+    state.spawnTimer = Math.max(0.5, GAME.spawnEvery - state.time * 0.009);
   }
   if (state.itemTimer <= 0) {
     spawnItem(state);
@@ -216,7 +216,7 @@ function updateSpawns(state, dt) {
 function updateEntities(state, dt) {
   const lavaBoost = state.map === "lava" ? GAME.lavaSpeedBonus : 0;
   const slowScale = state.slowTime > 0 ? 0.72 : 1;
-  const speed = (GAME.scrollSpeed + lavaBoost + Math.min(GAME.scrollSpeedMaxBonus, state.time * 7.5 + state.distance * 0.08)) * slowScale;
+  const speed = (GAME.scrollSpeed + lavaBoost + Math.min(GAME.scrollSpeedMaxBonus, state.time * 8.4 + state.distance * 0.09)) * slowScale;
   for (const group of [state.obstacles, state.items, state.effects]) {
     for (const entity of group) entity.x -= speed * dt;
   }

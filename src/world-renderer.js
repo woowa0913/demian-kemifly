@@ -50,6 +50,14 @@ export function drawImageCentered(ctx, image, x, y, w, h) {
   ctx.drawImage(image, x - w / 2, y - h / 2, w, h);
 }
 
+function drawImageFitCentered(ctx, image, x, y, maxW, maxH) {
+  if (!image) return;
+  const scale = Math.min(maxW / image.width, maxH / image.height);
+  const w = image.width * scale;
+  const h = image.height * scale;
+  ctx.drawImage(image, x - w / 2, y - h / 2, w, h);
+}
+
 function drawImageHeightCentered(ctx, image, x, y, h, maxW) {
   if (!image) return;
   const ratio = image.width / image.height;
@@ -144,26 +152,31 @@ function drawKemi(ctx, state, assets) {
   const player = state.player;
   const level = Math.max(1, Math.min(6, state.level || 1));
   const frame = (Math.floor(state.time * 10) % 3) + 1;
-  const key = state.damageTimer > 0 ? "hit" : `kemiLv${level}Frame${frame}`;
+  const key = `kemiLv${level}Frame${frame}`;
   const image = assets[key] || assets.kemi2;
-  const height = player.frameKick > 0 ? 86 : 79;
-  const maxWidth = player.frameKick > 0 ? 150 : 138;
+  const height = player.frameKick > 0 ? 72 : 66;
+  const maxWidth = player.frameKick > 0 ? 126 : 116;
   ctx.save();
   ctx.translate(player.x, player.y);
   ctx.rotate(Math.max(-0.32, Math.min(0.32, player.vy / 900)));
+  if (state.damageTimer > 0) {
+    ctx.globalAlpha = 0.78 + Math.sin(state.clock * 44) * 0.18;
+    ctx.shadowColor = "rgba(255, 90, 90, 0.65)";
+    ctx.shadowBlur = 18;
+  }
   drawImageHeightCentered(ctx, image, 0, 4, height, maxWidth);
   ctx.restore();
 }
 
 function drawEntity(ctx, assets, entity, state) {
   const image = assets[IMAGE_BY_KIND[entity.kind]];
-  const bob = Math.sin(entity.wobble + state.clock * 4.2) * 5;
+  const bob = entity.ground ? 0 : Math.sin(entity.wobble + state.clock * 4.2) * 5;
   const y = entity.y + bob;
   const item = ITEM_KINDS.has(entity.kind);
   if (item) drawCollectibleAura(ctx, entity, y, state.clock);
   else drawHazardAura(ctx, entity, y, state.clock);
-  const size = entity.r * 2.65;
-  drawImageCentered(ctx, image, entity.x, y, size, size);
+  const size = entity.r * (entity.ground ? 2.55 : 2.45);
+  drawImageFitCentered(ctx, image, entity.x, y, size, size);
 }
 
 function drawCollectibleAura(ctx, entity, y, time) {

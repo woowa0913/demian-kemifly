@@ -152,16 +152,61 @@ function getHallAvatarKey(level) {
 function button(ctx, state, action, text, x, y, w, h) {
   state.buttons.push({ action, x, y, w, h });
   const grad = ctx.createLinearGradient(x, y, x + w, y + h);
-  grad.addColorStop(0, "#087ed2");
-  grad.addColorStop(1, "#032c67");
-  roundRect(ctx, x, y, w, h, 8, grad, "#38e8ff");
-  label(ctx, text, x + w / 2, y + h / 2 + 2, h > 60 ? 32 : 24, "#ffffff", "900", "center");
+  grad.addColorStop(0, "#10c8ff");
+  grad.addColorStop(0.48, "#0866bc");
+  grad.addColorStop(1, "#021f58");
+  ctx.save();
+  ctx.shadowColor = "rgba(56, 232, 255, 0.68)";
+  ctx.shadowBlur = 18;
+  roundRect(ctx, x, y, w, h, 10, grad, "#66f1ff");
+  ctx.shadowBlur = 0;
+  roundRect(ctx, x + 5, y + 5, w - 10, h - 10, 7, "rgba(2, 25, 72, 0.28)", "rgba(160, 252, 255, 0.45)");
+  ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
+  roundRect(ctx, x + 14, y + 9, w - 28, Math.max(8, h * 0.16), 5, "rgba(255,255,255,0.14)", "rgba(255,255,255,0.04)");
+  drawButtonCaps(ctx, x, y, w, h);
+  drawButtonDiamond(ctx, x + w / 2, y + h - 2, h > 60 ? 15 : 11);
+  title(ctx, text, x + w / 2, y + h / 2 + 2, h > 60 ? 31 : 23);
+  ctx.restore();
 }
 
 function smallButton(ctx, state, action, text, x, y, w, h) {
   state.buttons.push({ action, x, y, w, h });
-  roundRect(ctx, x, y, w, h, 8, "rgba(4, 24, 58, 0.58)", "rgba(56, 232, 255, 0.65)");
-  label(ctx, text, x + w / 2, y + h / 2 + 1, 13, "#d9fbff", "900", "center");
+  const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+  grad.addColorStop(0, "rgba(15, 124, 190, 0.82)");
+  grad.addColorStop(1, "rgba(4, 24, 66, 0.82)");
+  ctx.save();
+  ctx.shadowColor = "rgba(56, 232, 255, 0.44)";
+  ctx.shadowBlur = 10;
+  roundRect(ctx, x, y, w, h, 8, grad, "rgba(116, 244, 255, 0.82)");
+  ctx.shadowBlur = 0;
+  roundRect(ctx, x + 4, y + 4, w - 8, h - 8, 6, "rgba(1, 15, 45, 0.24)", "rgba(255,255,255,0.22)");
+  label(ctx, text, x + w / 2, y + h / 2 + 1, 13, "#ffffff", "900", "center");
+  ctx.restore();
+}
+
+function drawButtonCaps(ctx, x, y, w, h) {
+  ctx.strokeStyle = "rgba(130, 246, 255, 0.7)";
+  ctx.lineWidth = 2;
+  for (const side of [-1, 1]) {
+    const px = side < 0 ? x + 18 : x + w - 18;
+    ctx.beginPath();
+    ctx.moveTo(px, y + 11);
+    ctx.lineTo(px + side * 18, y + h * 0.5);
+    ctx.lineTo(px, y + h - 11);
+    ctx.stroke();
+  }
+}
+
+function drawButtonDiamond(ctx, x, y, size) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(Math.PI / 4);
+  const grad = ctx.createLinearGradient(-size, -size, size, size);
+  grad.addColorStop(0, "#dffcff");
+  grad.addColorStop(0.52, "#38e8ff");
+  grad.addColorStop(1, "#034f9f");
+  roundRect(ctx, -size / 2, -size / 2, size, size, 2, grad, "#ffffff");
+  ctx.restore();
 }
 
 function drawImageFit(ctx, image, x, y, maxW, maxH) {

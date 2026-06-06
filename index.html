@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; media-src 'self'; style-src 'self'; script-src 'self'; worker-src 'self'; manifest-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'"
+    />
+    <title>KEMI FLY</title>
+    <meta name="theme-color" content="#061d3f" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="KEMI FLY" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23061d3f'/%3E%3Cpath d='M14 36c10-2 14-9 18-22 4 13 8 20 18 22-9 1-14 6-18 15-4-9-9-14-18-15z' fill='%2338e8ff'/%3E%3Ccircle cx='32' cy='32' r='8' fill='white'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="game-shell" aria-label="KEMI FLY 게임">
+      <video
+        id="introVideo"
+        class="intro-video"
+        src="./assets/intro-kemi-hatch.mp4"
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        aria-hidden="true"
+      ></video>
+      <canvas id="game" width="960" height="540"></canvas>
+      <input
+        id="nameInput"
+        class="name-input"
+        type="text"
+        inputmode="text"
+        maxlength="8"
+        autocomplete="off"
+        aria-label="명예의 전당 이름"
+      />
+    </main>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

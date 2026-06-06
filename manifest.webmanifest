@@ -1,0 +1,17 @@
+{
+  "name": "KEMI FLY: 케미의 첫 비행",
+  "short_name": "KEMI FLY",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#061d3f",
+  "theme_color": "#061d3f",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

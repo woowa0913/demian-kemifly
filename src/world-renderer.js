@@ -1,0 +1,211 @@
+import { GAME } from "./config.js";
+import { getView } from "./layout.js";
+
+const ITEM_KINDS = new Set(["crystal", "goldCrystal", "smileCloud", "shield", "star", "feather", "magnet", "hourglass", "energyBolt", "heart"]);
+const GOLD_KINDS = new Set(["goldCrystal", "star", "hourglass"]);
+const IMAGE_BY_KIND = {
+  crystal: "crystal",
+  goldCrystal: "goldCrystal",
+  smileCloud: "smileCloud",
+  shield: "shield",
+  star: "star",
+  feather: "feather",
+  magnet: "magnet",
+  hourglass: "hourglass",
+  energyBolt: "energyBolt",
+  heart: "heart",
+  stoneIsland: "stoneIsland",
+  stoneCluster: "stoneCluster",
+  boulder: "boulder",
+  purpleCrystal: "purpleCrystal",
+  iceSpike: "iceSpike",
+  purpleStorm: "purpleStorm",
+  thornRing: "thornRing",
+  ruinArch: "ruinArch",
+  stoneCube: "stoneCube",
+  lavaComet: "lavaComet",
+  lavaBall: "lavaBall",
+  purplePlatform: "purplePlatform",
+};
+
+export function drawWorld(ctx, state, assets) {
+  const view = getView(state);
+  const lava = state.map === "lava";
+  const image = lava ? assets.lavaBackground : assets.background;
+  drawBackground(ctx, image, state.clock || state.time, state.mode, view, lava);
+  if (!["playing", "paused", "gameover"].includes(state.mode)) return;
+  ctx.save();
+  if (state.shake > 0) {
+    ctx.translate(Math.sin(state.clock * 80) * state.shake, Math.cos(state.clock * 71) * state.shake);
+  }
+  for (const obstacle of state.obstacles) drawEntity(ctx, assets, obstacle, state);
+  for (const item of state.items) drawEntity(ctx, assets, item, state);
+  drawKemi(ctx, state, assets);
+  for (const effect of state.effects) drawFloatText(ctx, effect);
+  ctx.restore();
+}
+
+export function drawImageCentered(ctx, image, x, y, w, h) {
+  if (!image) return;
+  ctx.drawImage(image, x - w / 2, y - h / 2, w, h);
+}
+
+function drawImageHeightCentered(ctx, image, x, y, h, maxW) {
+  if (!image) return;
+  const ratio = image.width / image.height;
+  const w = Math.min(maxW, h * ratio);
+  const drawH = w === maxW ? maxW / ratio : h;
+  ctx.drawImage(image, x - w / 2, y - drawH / 2, w, drawH);
+}
+
+function drawBackground(ctx, image, time, mode, view, lava) {
+  ctx.clearRect(0, 0, view.width, view.height);
+  const speed = mode === "playing" ? (lava ? 28 : 18) : 6;
+  const offset = (time * speed + view.width * 0.34) % (view.width * 2);
+  drawCoverTile(ctx, image, 0, 0, view.width, view.height, false);
+  ctx.save();
+  ctx.globalAlpha = 0.34;
+  for (let i = 0; i < 4; i += 1) {
+    drawCoverTile(ctx, image, -offset + i * view.width, 0, view.width, view.height, i % 2 === 1);
+  }
+  ctx.restore();
+  drawDrift(ctx, time, mode, view, lava);
+  const gradient = ctx.createLinearGradient(0, 0, 0, view.height);
+  gradient.addColorStop(0, lava ? "rgba(70, 8, 10, 0.18)" : "rgba(4, 20, 50, 0.1)");
+  gradient.addColorStop(1, lava ? "rgba(28, 5, 10, 0.38)" : "rgba(2, 25, 44, 0.22)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, view.width, view.height);
+}
+
+function drawDrift(ctx, time, mode, view, lava) {
+  const speed = mode === "playing" ? 220 : 34;
+  ctx.save();
+  for (let i = 0; i < 34; i += 1) {
+    const baseY = 34 + ((i * 73) % Math.max(1, view.height - 72));
+    const x = (view.width + 120 - ((time * speed + i * 151) % (view.width + 240)));
+    const len = 24 + ((i * 17) % 56);
+    const alpha = mode === "playing" ? 0.16 : 0.06;
+    ctx.strokeStyle = lava ? `rgba(255, 185, 96, ${alpha + 0.05})` : `rgba(166, 246, 255, ${alpha})`;
+    ctx.lineWidth = 1 + (i % 3);
+    ctx.beginPath();
+    ctx.moveTo(x, baseY);
+    ctx.lineTo(x + len, baseY - 4);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawKemi(ctx, state, assets) {
+  const player = state.player;
+  const level = Math.max(1, Math.min(6, state.level || 1));
+  const frame = (Math.floor(state.time * 10) % 3) + 1;
+  const key = state.damageTimer > 0 ? "hit" : `kemiLv${level}Frame${frame}`;
+  const image = assets[key] || assets.kemi2;
+  const height = player.frameKick > 0 ? 86 : 79;
+  const maxWidth = player.frameKick > 0 ? 150 : 138;
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  ctx.rotate(Math.max(-0.32, Math.min(0.32, player.vy / 900)));
+  drawImageHeightCentered(ctx, image, 0, 4, height, maxWidth);
+  ctx.restore();
+}
+
+function drawEntity(ctx, assets, entity, state) {
+  const image = assets[IMAGE_BY_KIND[entity.kind]];
+  const bob = Math.sin(entity.wobble + state.clock * 4.2) * 5;
+  const y = entity.y + bob;
+  const item = ITEM_KINDS.has(entity.kind);
+  if (item) drawCollectibleAura(ctx, entity, y, state.clock);
+  else drawHazardAura(ctx, entity, y, state.clock);
+  const size = entity.r * 2.65;
+  drawImageCentered(ctx, image, entity.x, y, size, size);
+}
+
+function drawCollectibleAura(ctx, entity, y, time) {
+  const gold = GOLD_KINDS.has(entity.kind);
+  const color = gold ? "rgba(255, 220, 88, 0.95)" : "rgba(84, 255, 176, 0.95)";
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(entity.x, y, entity.r + 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  drawRing(ctx, entity.x, y, entity.r + 14 + Math.sin(time * 6) * 2, color, 4);
+  drawRing(ctx, entity.x, y, entity.r + 27, gold ? "rgba(255, 245, 160, 0.45)" : "rgba(150, 255, 220, 0.45)", 2);
+  ctx.fillStyle = gold ? "rgba(255, 232, 110, 0.98)" : "rgba(116, 255, 205, 0.98)";
+  ctx.font = "900 20px Arial, Apple SD Gothic Neo, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("+", entity.x, y - entity.r - 23);
+}
+
+function drawHazardAura(ctx, entity, y, time) {
+  const pulse = 0.55 + Math.sin(time * 8) * 0.18;
+  ctx.save();
+  ctx.globalAlpha = 0.2;
+  ctx.fillStyle = "rgba(255, 42, 42, 0.9)";
+  ctx.beginPath();
+  ctx.arc(entity.x, y, entity.r + 20, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  drawRing(ctx, entity.x, y, entity.r + 15, `rgba(255, 72, 72, ${pulse})`, 4);
+  drawDangerMarks(ctx, entity.x, y, entity.r + 28, pulse);
+  ctx.fillStyle = `rgba(255, 82, 82, ${pulse + 0.15})`;
+  ctx.font = "900 20px Arial, Apple SD Gothic Neo, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("!", entity.x, y - entity.r - 22);
+}
+
+function drawDangerMarks(ctx, x, y, radius, alpha) {
+  ctx.save();
+  ctx.strokeStyle = `rgba(255, 68, 68, ${alpha})`;
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 4; i += 1) {
+    const a = i * Math.PI * 0.5;
+    const x1 = x + Math.cos(a) * (radius - 7);
+    const y1 = y + Math.sin(a) * (radius - 7);
+    const x2 = x + Math.cos(a) * (radius + 9);
+    const y2 = y + Math.sin(a) * (radius + 9);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawFloatText(ctx, effect) {
+  ctx.font = "900 18px Arial, Apple SD Gothic Neo, sans-serif";
+  ctx.fillStyle = effect.good ? "#78ffca" : "#ffd76b";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(effect.text, effect.x, effect.y - (1 - effect.life) * 38);
+}
+
+function drawRing(ctx, x, y, radius, color, width) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.setLineDash([10, 8]);
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawCoverTile(ctx, image, x, y, w, h, mirror) {
+  const scale = Math.max(w / image.width, h / image.height);
+  const sw = w / scale;
+  const sh = h / scale;
+  ctx.save();
+  if (mirror) {
+    ctx.translate(x + w, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(image, (image.width - sw) / 2, (image.height - sh) / 2, sw, sh, 0, 0, w, h);
+  } else {
+    ctx.drawImage(image, (image.width - sw) / 2, (image.height - sh) / 2, sw, sh, x, y, w, h);
+  }
+  ctx.restore();
+}

@@ -82,7 +82,6 @@ export const ASSET_PATHS = Object.freeze({
 
 export const MEDIA_PATHS = Object.freeze({
   bgm: "./assets/bgm-running-past-clouds.mp3",
-  intro: "./assets/intro-kemi-hatch.mp4",
 });
 
 export const TITLES = Object.freeze([

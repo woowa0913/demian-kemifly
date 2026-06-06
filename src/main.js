@@ -8,7 +8,6 @@ import { renderGameToText } from "./text-state.js";
 
 const canvas = document.querySelector("#game");
 const nameInput = document.querySelector("#nameInput");
-const introVideo = document.querySelector("#introVideo");
 const ctx = canvas.getContext("2d", { alpha: false });
 const state = createGameState();
 const audio = createAudio();
@@ -20,11 +19,10 @@ bootstrap();
 async function bootstrap() {
   assets = await loadAssets();
   applyCanvasLayout(canvas, state);
-  prepareIntroVideo();
   bindInput();
   registerServiceWorker();
   exposeTestHooks();
-  render(ctx, state, assets, introVideo);
+  render(ctx, state, assets);
   syncRemoteLeaderboard();
   requestAnimationFrame(loop);
 }
@@ -35,9 +33,8 @@ function loop(now) {
   state.clock += dt;
   updateState(state, dt);
   playQueuedAudio();
-  render(ctx, state, assets, introVideo);
+  render(ctx, state, assets);
   syncNameInput();
-  syncIntroVideo();
   requestAnimationFrame(loop);
 }
 
@@ -69,7 +66,6 @@ function handleKeyDown(event) {
   } else if (event.code === "Escape" && document.fullscreenElement) {
     document.exitFullscreen().catch(() => {});
   }
-  syncIntroVideo();
 }
 
 function handleNameKey(event) {
@@ -86,11 +82,9 @@ function handlePointer(event) {
   const button = state.buttons.find((item) => isInside(point, item));
   if (button) {
     performAction(button.action);
-    syncIntroVideo();
     return;
   }
   if (state.mode === "playing" || state.mode === "menu") flap(state);
-  syncIntroVideo();
 }
 
 function handleEnter() {
@@ -98,7 +92,6 @@ function handleEnter() {
   else if (state.mode === "gameover" && state.isRecord && !state.saved) handleRecordSubmit();
   else if (state.mode === "gameover") startRun(state);
   else if (state.mode === "paused") togglePause(state);
-  syncIntroVideo();
 }
 
 function performAction(action) {
@@ -110,7 +103,6 @@ function performAction(action) {
   else if (action === "sound") state.soundMuted = audio.toggleMute();
   if (action !== "sound") audio.play("button");
   syncNameInput();
-  syncIntroVideo();
 }
 
 function handleRecordSubmit() {
@@ -124,7 +116,7 @@ function handleRecordSubmit() {
   if (!accepted) return;
   saveScoreRemote(name, stats).then((leaderboard) => {
     state.leaderboard = leaderboard;
-    render(ctx, state, assets, introVideo);
+    render(ctx, state, assets);
   });
 }
 
@@ -142,7 +134,7 @@ function syncNameInput() {
 function syncRemoteLeaderboard() {
   syncLeaderboardFromServer().then((leaderboard) => {
     state.leaderboard = leaderboard;
-    render(ctx, state, assets, introVideo);
+    render(ctx, state, assets);
   });
 }
 
@@ -175,9 +167,8 @@ function exposeTestHooks() {
       updateState(state, 1 / 60);
     }
     playQueuedAudio();
-    render(ctx, state, assets, introVideo);
+    render(ctx, state, assets);
     syncNameInput();
-    syncIntroVideo();
   };
 }
 
@@ -197,17 +188,6 @@ function registerServiceWorker() {
 
 function handleResize() {
   applyCanvasLayout(canvas, state);
-  render(ctx, state, assets, introVideo);
+  render(ctx, state, assets);
   syncNameInput();
-}
-
-function prepareIntroVideo() {
-  if (!introVideo) return;
-  introVideo.play().catch(() => {});
-}
-
-function syncIntroVideo() {
-  if (!introVideo) return;
-  if (state.mode === "menu") introVideo.play().catch(() => {});
-  else introVideo.pause();
 }

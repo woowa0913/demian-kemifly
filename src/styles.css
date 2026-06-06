@@ -41,14 +41,6 @@ canvas {
   touch-action: manipulation;
 }
 
-.intro-video {
-  position: fixed;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
-
 @media (orientation: portrait) {
   .game-shell {
     align-items: start;

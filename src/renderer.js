@@ -3,11 +3,11 @@ import { getView } from "./layout.js";
 import { getTitle } from "./storage.js";
 import { drawImageCentered, drawWorld } from "./world-renderer.js";
 
-export function render(ctx, state, assets, introVideo = null) {
+export function render(ctx, state, assets) {
   state.buttons = [];
   drawWorld(ctx, state, assets);
   drawHud(ctx, state);
-  if (state.mode === "menu") drawMenu(ctx, state, assets, introVideo);
+  if (state.mode === "menu") drawMenu(ctx, state, assets);
   if (state.mode === "paused") drawPause(ctx, state);
   if (state.mode === "gameover") drawGameOver(ctx, state, assets);
   if (state.mode === "hall") drawHall(ctx, state);
@@ -54,10 +54,9 @@ function getLevelProgressText(state) {
   return `다음 LV ${state.itemsCollected}/${next}`;
 }
 
-function drawMenu(ctx, state, assets, introVideo) {
+function drawMenu(ctx, state, assets) {
   const view = getView(state);
   const cx = view.width / 2;
-  drawIntroFrame(ctx, introVideo, view);
   drawScrim(ctx, 0.32);
   const logoY = view.portrait ? 132 : 104;
   const birdY = view.portrait ? 330 : 285;
@@ -70,14 +69,6 @@ function drawMenu(ctx, state, assets, introVideo) {
   if (view.portrait) smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", cx - 70, startY + 170, 140, 44);
   else smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", view.width - 172, 34, 134, 42);
   label(ctx, view.portrait ? "TAP TO FLY" : "SPACE / TAP", cx, view.portrait ? startY + 244 : 505, 15, "#d9fbff", "700", "center");
-}
-
-function drawIntroFrame(ctx, video, view) {
-  if (!video || video.readyState < 2) return;
-  ctx.save();
-  ctx.globalAlpha = 0.52;
-  drawCoverVideo(ctx, video, 0, 0, view.width, view.height);
-  ctx.restore();
 }
 
 function drawPause(ctx, state) {
@@ -153,14 +144,6 @@ function drawBar(ctx, x, y, w, h, ratio, overrideColor = null) {
 function drawScrim(ctx, alpha) {
   ctx.fillStyle = `rgba(3, 10, 30, ${alpha})`;
   ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-}
-
-function drawCoverVideo(ctx, video, x, y, w, h) {
-  if (!video.videoWidth || !video.videoHeight) return;
-  const scale = Math.max(w / video.videoWidth, h / video.videoHeight);
-  const sw = w / scale;
-  const sh = h / scale;
-  ctx.drawImage(video, (video.videoWidth - sw) / 2, (video.videoHeight - sh) / 2, sw, sh, x, y, w, h);
 }
 
 function title(ctx, text, x, y, size) {

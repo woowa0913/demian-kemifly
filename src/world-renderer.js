@@ -60,6 +60,10 @@ function drawImageHeightCentered(ctx, image, x, y, h, maxW) {
 
 function drawBackground(ctx, image, time, mode, view, lava) {
   ctx.clearRect(0, 0, view.width, view.height);
+  if (mode === "menu") {
+    drawMenuBackground(ctx, image, time, view);
+    return;
+  }
   const speed = mode === "playing" ? (lava ? 28 : 18) : 6;
   const offset = (time * speed + view.width * 0.34) % (view.width * 2);
   drawCoverTile(ctx, image, 0, 0, view.width, view.height, false);
@@ -75,6 +79,47 @@ function drawBackground(ctx, image, time, mode, view, lava) {
   gradient.addColorStop(1, lava ? "rgba(28, 5, 10, 0.38)" : "rgba(2, 25, 44, 0.22)");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, view.width, view.height);
+}
+
+function drawMenuBackground(ctx, image, time, view) {
+  const scale = 1.08;
+  const width = view.width * scale;
+  const height = view.height * scale;
+  const x = (view.width - width) / 2 + Math.sin(time * 0.16) * view.width * 0.035;
+  const y = (view.height - height) / 2 + Math.cos(time * 0.12) * view.height * 0.018;
+  drawCoverTile(ctx, image, x, y, width, height, false);
+  drawMenuSparkles(ctx, time, view);
+  const gradient = ctx.createLinearGradient(0, 0, 0, view.height);
+  gradient.addColorStop(0, "rgba(4, 18, 46, 0.14)");
+  gradient.addColorStop(0.55, "rgba(3, 18, 38, 0.06)");
+  gradient.addColorStop(1, "rgba(2, 14, 30, 0.32)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, view.width, view.height);
+}
+
+function drawMenuSparkles(ctx, time, view) {
+  ctx.save();
+  for (let i = 0; i < 24; i += 1) {
+    const x = ((i * 157 + 41) % view.width) + Math.sin(time * 0.22 + i) * 10;
+    const y = 32 + ((i * 83 + 29) % Math.max(1, view.height - 84));
+    const pulse = 0.35 + Math.sin(time * (0.9 + (i % 5) * 0.13) + i * 1.7) * 0.35;
+    if (pulse <= 0.08) continue;
+    const radius = 1.4 + (i % 4) * 0.55;
+    ctx.globalAlpha = Math.min(0.7, pulse);
+    ctx.fillStyle = i % 6 === 0 ? "#ffd76b" : "#b9fbff";
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = i % 6 === 0 ? "rgba(255, 215, 107, 0.45)" : "rgba(120, 240, 255, 0.42)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x - radius * 3, y);
+    ctx.lineTo(x + radius * 3, y);
+    ctx.moveTo(x, y - radius * 3);
+    ctx.lineTo(x, y + radius * 3);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function drawDrift(ctx, time, mode, view, lava) {

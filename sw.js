@@ -1,4 +1,4 @@
-const CACHE_NAME = "kemi-fly-v7";
+const CACHE_NAME = "kemi-fly-v8";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -19,7 +19,6 @@ const CORE_ASSETS = [
   "./src/text-state.js",
   "./src/world-renderer.js",
   "./assets/bgm-running-past-clouds.mp3",
-  "./assets/intro-kemi-hatch.mp4",
   "./assets/lava-background.png",
   "./assets/kemi-lv1-frame-1.png",
   "./assets/kemi-lv2-frame-1.png",

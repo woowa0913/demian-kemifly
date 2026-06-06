@@ -1,10 +1,26 @@
 import { MEDIA_PATHS } from "./config.js";
 
+const SFX_VOLUME = Object.freeze({
+  flap: 0.34,
+  collect: 0.38,
+  gold: 0.4,
+  heal: 0.36,
+  shield: 0.38,
+  near: 0.36,
+  damage: 0.34,
+  levelup: 0.42,
+  fever: 0.38,
+  gameover: 0.42,
+  start: 0.34,
+  button: 0.3,
+});
+
 export function createAudio() {
   let context = null;
   let master = null;
   let muted = false;
   const music = new Audio(MEDIA_PATHS.bgm);
+  const samples = createSamples(MEDIA_PATHS.sfx);
   music.loop = true;
   music.preload = "auto";
   music.volume = 0.36;
@@ -23,6 +39,7 @@ export function createAudio() {
   function toggleMute() {
     muted = !muted;
     music.muted = muted;
+    for (const sample of samples.values()) sample.muted = muted;
     if (!context) return muted;
     master.gain.setTargetAtTime(muted ? 0 : 0.34, context.currentTime, 0.04);
     if (muted) music.pause();
@@ -44,9 +61,11 @@ export function createAudio() {
     unlock();
     if (!context) return;
     const type = typeof event === "string" ? event : event.type;
+    if (playSample(type)) return;
     const now = context.currentTime;
     if (type === "flap") tone(520, now, 0.08, "sine", 0.09, 820);
     else if (type === "collect") sparkle(now, 740, 1040);
+    else if (type === "gold") sparkle(now, 860, 1520);
     else if (type === "heal") sparkle(now, 520, 760);
     else if (type === "shield") sparkle(now, 420, 920);
     else if (type === "damage") noise(now, 0.12, 0.13);
@@ -55,6 +74,16 @@ export function createAudio() {
     else if (type === "levelup") levelUp(now);
     else if (type === "gameover") gameOver(now);
     else if (type === "start" || type === "button") tone(440, now, 0.08, "triangle", 0.055, 660);
+  }
+
+  function playSample(type) {
+    const sample = samples.get(type);
+    if (!sample) return false;
+    const node = sample.cloneNode();
+    node.volume = SFX_VOLUME[type] ?? 0.34;
+    node.muted = muted;
+    node.play().catch(() => {});
+    return true;
   }
 
   function sparkle(now, a, b) {
@@ -108,4 +137,15 @@ export function createAudio() {
   }
 
   return { unlock, play, toggleMute, isMuted };
+}
+
+function createSamples(paths) {
+  const samples = new Map();
+  for (const [type, src] of Object.entries(paths)) {
+    const sample = new Audio(src);
+    sample.preload = "auto";
+    sample.volume = SFX_VOLUME[type] ?? 0.34;
+    samples.set(type, sample);
+  }
+  return samples;
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = "kemi-fly-v10";
+const CACHE_NAME = "kemi-fly-v11";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -19,6 +19,17 @@ const CORE_ASSETS = [
   "./src/text-state.js",
   "./src/world-renderer.js",
   "./assets/bgm-running-past-clouds.mp3",
+  "./assets/sfx/01-flap-wing-pop.wav",
+  "./assets/sfx/02-crystal-collect-blue.wav",
+  "./assets/sfx/03-gold-crystal-bonus.wav",
+  "./assets/sfx/04-ai-cloud-heal.wav",
+  "./assets/sfx/05-shield-on.wav",
+  "./assets/sfx/06-near-miss-whoosh.wav",
+  "./assets/sfx/07-damage-soft-hit.wav",
+  "./assets/sfx/08-level-up-bright.wav",
+  "./assets/sfx/09-fever-combo.wav",
+  "./assets/sfx/10-game-over-gentle.wav",
+  "./assets/sfx/11-button-start.wav",
   "./assets/lava-background.png",
   "./assets/kemi-lv1-frame-1.png",
   "./assets/kemi-lv2-frame-1.png",

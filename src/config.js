@@ -84,6 +84,20 @@ export const ASSET_PATHS = Object.freeze({
 
 export const MEDIA_PATHS = Object.freeze({
   bgm: "./assets/bgm-running-past-clouds.mp3",
+  sfx: Object.freeze({
+    flap: "./assets/sfx/01-flap-wing-pop.wav",
+    collect: "./assets/sfx/02-crystal-collect-blue.wav",
+    gold: "./assets/sfx/03-gold-crystal-bonus.wav",
+    heal: "./assets/sfx/04-ai-cloud-heal.wav",
+    shield: "./assets/sfx/05-shield-on.wav",
+    near: "./assets/sfx/06-near-miss-whoosh.wav",
+    damage: "./assets/sfx/07-damage-soft-hit.wav",
+    levelup: "./assets/sfx/08-level-up-bright.wav",
+    fever: "./assets/sfx/09-fever-combo.wav",
+    gameover: "./assets/sfx/10-game-over-gentle.wav",
+    start: "./assets/sfx/11-button-start.wav",
+    button: "./assets/sfx/11-button-start.wav",
+  }),
 });
 
 export const TITLES = Object.freeze([

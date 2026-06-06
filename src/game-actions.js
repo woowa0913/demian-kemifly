@@ -2,6 +2,8 @@ import { GAME } from "./config.js";
 import { addFever, scoreMultiplier, updateMissions } from "./progression.js";
 import { getTitle, loadLeaderboard, qualifiesForLeaderboard } from "./storage.js";
 
+const GOLD_SOUND_ITEMS = new Set(["goldCrystal", "star", "hourglass"]);
+
 export function drainAudioEvents(state) {
   const events = state.audioEvents;
   state.audioEvents = [];
@@ -32,6 +34,7 @@ export function collect(state, item) {
   state.effects.push({ x: item.x, y: item.y, text: `+${item.score}`, life: 0.7, good: true });
   if (item.shield) emit(state, "shield");
   else if (item.heal) emit(state, "heal");
+  else if (GOLD_SOUND_ITEMS.has(item.kind)) emit(state, "gold");
   else emit(state, "collect");
 }
 

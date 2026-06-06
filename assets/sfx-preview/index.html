@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KEMI FLY SFX Preview</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #081223;
+        --panel: #101d34;
+        --line: #263958;
+        --text: #eef7ff;
+        --muted: #a9bbcf;
+        --accent: #6ee7d8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 20% 12%, rgba(110, 231, 216, 0.18), transparent 28rem),
+          linear-gradient(180deg, #09172c 0%, var(--bg) 100%);
+        color: var(--text);
+        font-family: Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      }
+
+      main {
+        width: min(960px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 32px 0 48px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(28px, 5vw, 44px);
+        letter-spacing: 0;
+      }
+
+      p {
+        margin: 0 0 24px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+        gap: 16px;
+        align-items: center;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(16, 29, 52, 0.88);
+      }
+
+      .name {
+        margin: 0 0 5px;
+        font-size: 17px;
+        font-weight: 800;
+      }
+
+      .usage {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      audio {
+        width: 100%;
+      }
+
+      code {
+        color: var(--accent);
+        font-size: 13px;
+      }
+
+      @media (max-width: 720px) {
+        .item {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>KEMI FLY SFX Preview</h1>
+      <p>게임에 아직 연결하지 않은 프리뷰용 효과음입니다. 상황별로 들어보고 채택할 것만 골라 반영하면 됩니다.</p>
+      <section class="grid" aria-label="효과음 목록">
+        <article class="item">
+          <div>
+            <h2 class="name">상승/날갯짓 <code>flap</code></h2>
+            <p class="usage">탭 또는 스페이스로 데미안이 위로 튀어 오를 때.</p>
+          </div>
+          <audio controls src="../sfx/01-flap-wing-pop.wav"></audio>
+        </article>
+        <article class="item">
+          <div>
+            <h2 class="name">파란 수정 획득 <code>collect</code></h2>
+            <p class="usage">기본 점수 아이템을 먹을 때 쓰는 맑은 반짝임.</p>
+          </div>
+          <audio controls src="../sfx/02-crystal-collect-blue.wav"></audio>
+        </article>
+        <article class="item">
+          <div>
+            <h2 class="name">금색 보너스 획득 <code>gold</code></h2>
+            <p class="usage">금색 수정, 별, 모래시계처럼 보상이 큰 아이템용.</p>
+          </div>
+          <audio controls src="../sfx/03-gold-crystal-bonus.wav"></audio>
+        </article>
+        <article class="item">
+          <div>
+            <h2 class="name">AI 구름/회복 <code>heal</code></h2>
+            <p class="usage">에너지 회복이나 부드러운 도움 아이템을 먹을 때.</p>
+          </div>
+          <audio controls src="../sfx/04-ai-cloud-heal.wav"></audio>
+        </article>
+        <article class="item">
+          <div>
+            <h2 class="name">보호막 켜짐 <code>shield</code></h2>
+            <p class="usage">방어 아이템 획득과 보호막 활성화 피드백.</p>
+          </div>
+          <audio controls src="../sfx/05-shield-on.wav"></audio>
+        </article>
+        <article class="item">
+          <div>
+            <h2 class="name">아슬아슬 회피 <code>near</code></h2>
+            <p class="usage">장애물을 근접 회피했을 때의 짧은 바람 소리.</p>
+          </div>
+          <audio controls src="../sfx/06-near-miss-whoosh.wav"></audio>
+        </article>
+        <article class="item">
+          <div>
+            <h2 class="name">피격/에너지 감소 <code>damage</code></h2>
+            <p class="usage">충돌했지만 즉시 게임오버는 아닌 부드러운 타격음.</p>
+          </div>
+          <audio controls src="../sfx/07-damage-soft-hit.wav"></audio>
+        </article>
+        <article class="item">
+          <div>
+            <h2 class="name">레벨업 <code>levelup</code></h2>
+            <p class="usage">Lv1~Lv6 성장 연출에 맞는 밝은 상승음.</p>
+          </div>
+          <audio controls src="../sfx/08-level-up-bright.wav"></audio>
+        </article>
+        <article class="item">
+          <div>
+            <h2 class="name">피버/콤보 <code>fever</code></h2>
+            <p class="usage">콤보 보상이나 피버 진입처럼 신나는 순간.</p>
+          </div>
+          <audio controls src="../sfx/09-fever-combo.wav"></audio>
+        </article>
+        <article class="item">
+          <div>
+            <h2 class="name">게임오버 <code>gameover</code></h2>
+            <p class="usage">너무 무겁지 않게 실패를 알려주는 하강음.</p>
+          </div>
+          <audio controls src="../sfx/10-game-over-gentle.wav"></audio>
+        </article>
+        <article class="item">
+          <div>
+            <h2 class="name">버튼/시작 <code>button</code></h2>
+            <p class="usage">시작, 재시작, 메뉴 선택에 쓰기 좋은 짧은 확인음.</p>
+          </div>
+          <audio controls src="../sfx/11-button-start.wav"></audio>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

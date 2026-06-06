@@ -63,6 +63,9 @@ function handleKeyDown(event) {
   } else if (event.code === "Enter") {
     event.preventDefault();
     handleEnter();
+  } else if (event.code === "Escape" && (state.mode === "playing" || state.mode === "paused")) {
+    event.preventDefault();
+    togglePause(state);
   } else if (event.code === "Escape" && document.fullscreenElement) {
     document.exitFullscreen().catch(() => {});
   }
@@ -97,6 +100,7 @@ function handleEnter() {
 function performAction(action) {
   if (action === "start" || action === "restart") startRun(state);
   else if (action === "resume") togglePause(state);
+  else if (action === "pause") togglePause(state);
   else if (action === "hall") showHall(state);
   else if (action === "back") state.mode = "menu";
   else if (action === "save") handleRecordSubmit();

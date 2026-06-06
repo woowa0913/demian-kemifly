@@ -18,6 +18,8 @@ function drawHud(ctx, state) {
   const view = getView(state);
   const top = view.portrait ? 18 : 18;
   const soundY = view.portrait ? view.height - 76 : view.height - 68;
+  const soundX = view.width - 158;
+  const pauseX = soundX - 58;
   drawPanel(ctx, 20, 18, 238, 76, 0.58);
   label(ctx, "SCORE", 42, 45, 15, "#9af7ff", "700");
   label(ctx, String(Math.floor(state.score)), 42, 75, 28, "#ffffff", "900");
@@ -28,7 +30,8 @@ function drawHud(ctx, state) {
   drawBar(ctx, view.width - energyW + 2, 58, energyW - 52, 16, state.energy / GAME.maxEnergy);
   label(ctx, `SHIELD ${state.shield}`, view.width - 74, 89, 13, "#ffd76b", "800", "center");
   drawProgressHud(ctx, state, view);
-  smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", view.width - 158, soundY, 136, 42);
+  iconButton(ctx, state, "pause", state.mode === "paused" ? "▶" : "Ⅱ", pauseX, soundY, 46, 42);
+  smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", soundX, soundY, 136, 42);
 }
 
 function drawProgressHud(ctx, state, view) {
@@ -44,7 +47,7 @@ function drawProgressHud(ctx, state, view) {
   const levelText = getLevelProgressText(state);
   const text = mission.done ? levelText : `${mission.label} ${progress}/${mission.target} · ${levelText}`;
   label(ctx, text, x + 18, y + 63, 13, mission.done ? "#78ffca" : "#d9fbff", "800");
-  if (state.map === "lava") label(ctx, "LAVA ZONE", x + w - 18, y + 24, 13, "#ffb357", "900", "right");
+  if (state.map === "lava") label(ctx, `LAVA ${Math.ceil(state.lavaTimer)}s`, x + w - 18, y + 24, 13, "#ffb357", "900", "right");
 }
 
 function getLevelProgressText(state) {
@@ -181,6 +184,20 @@ function smallButton(ctx, state, action, text, x, y, w, h) {
   ctx.shadowBlur = 0;
   roundRect(ctx, x + 4, y + 4, w - 8, h - 8, 6, "rgba(1, 15, 45, 0.24)", "rgba(255,255,255,0.22)");
   label(ctx, text, x + w / 2, y + h / 2 + 1, 13, "#ffffff", "900", "center");
+  ctx.restore();
+}
+
+function iconButton(ctx, state, action, text, x, y, w, h) {
+  state.buttons.push({ action, x, y, w, h });
+  const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+  grad.addColorStop(0, "rgba(20, 165, 220, 0.9)");
+  grad.addColorStop(1, "rgba(4, 26, 72, 0.9)");
+  ctx.save();
+  ctx.shadowColor = "rgba(56, 232, 255, 0.5)";
+  ctx.shadowBlur = 11;
+  roundRect(ctx, x, y, w, h, 8, grad, "rgba(116, 244, 255, 0.85)");
+  ctx.shadowBlur = 0;
+  label(ctx, text, x + w / 2, y + h / 2 + 1, 20, "#ffffff", "900", "center");
   ctx.restore();
 }
 

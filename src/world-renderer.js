@@ -1,8 +1,9 @@
 import { GAME } from "./config.js";
 import { getView } from "./layout.js";
 
-const ITEM_KINDS = new Set(["crystal", "goldCrystal", "smileCloud", "shield", "star", "feather", "magnet", "hourglass", "energyBolt", "heart"]);
+const ITEM_KINDS = new Set(["crystal", "goldCrystal", "smileCloud", "shield", "star", "feather", "magnet", "hourglass", "energyBolt", "heart", "lavaPortal"]);
 const GOLD_KINDS = new Set(["goldCrystal", "star", "hourglass"]);
+const TRAP_KINDS = new Set(["lavaPortal"]);
 const IMAGE_BY_KIND = {
   crystal: "crystal",
   goldCrystal: "goldCrystal",
@@ -14,6 +15,7 @@ const IMAGE_BY_KIND = {
   hourglass: "hourglass",
   energyBolt: "energyBolt",
   heart: "heart",
+  lavaPortal: "lavaPortal",
   stoneIsland: "stoneIsland",
   stoneCluster: "stoneCluster",
   boulder: "boulder",
@@ -164,7 +166,28 @@ function drawKemi(ctx, state, assets) {
     ctx.shadowColor = "rgba(255, 90, 90, 0.65)";
     ctx.shadowBlur = 18;
   }
+  if (state.shield > 0 || state.shieldFlash > 0) drawShieldAura(ctx, state);
   drawImageHeightCentered(ctx, image, 0, 4, height, maxWidth);
+  ctx.restore();
+}
+
+function drawShieldAura(ctx, state) {
+  const pulse = 0.52 + Math.sin(state.clock * 7) * 0.16;
+  const glow = Math.min(1, 0.4 + state.shield * 0.18 + state.shieldFlash * 0.22);
+  ctx.save();
+  ctx.globalAlpha = glow;
+  ctx.strokeStyle = `rgba(116, 244, 255, ${pulse})`;
+  ctx.fillStyle = "rgba(88, 225, 255, 0.11)";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.ellipse(0, 4, 54 + pulse * 8, 42 + pulse * 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.42)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(0, 4, 62 + pulse * 7, 48 + pulse * 5, 0, -0.5, Math.PI * 1.35);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -173,8 +196,9 @@ function drawEntity(ctx, assets, entity, state) {
   const bob = entity.ground ? 0 : Math.sin(entity.wobble + state.clock * 4.2) * 5;
   const y = entity.y + bob;
   const item = ITEM_KINDS.has(entity.kind);
-  if (item) drawCollectibleAura(ctx, entity, y, state.clock);
-  else drawHazardAura(ctx, entity, y, state.clock);
+  if (TRAP_KINDS.has(entity.kind)) drawTrapAura(ctx, entity, y, state.clock);
+  else if (item) drawCollectibleAura(ctx, entity, y, state.clock);
+  else drawHazardSignal(ctx, entity, y, state.clock);
   const size = entity.r * (entity.ground ? 2.55 : 2.45);
   drawImageFitCentered(ctx, image, entity.x, y, size, size);
 }
@@ -198,39 +222,33 @@ function drawCollectibleAura(ctx, entity, y, time) {
   ctx.fillText("+", entity.x, y - entity.r - 23);
 }
 
-function drawHazardAura(ctx, entity, y, time) {
-  const pulse = 0.55 + Math.sin(time * 8) * 0.18;
+function drawTrapAura(ctx, entity, y, time) {
+  const pulse = 0.55 + Math.sin(time * 7) * 0.2;
   ctx.save();
-  ctx.globalAlpha = 0.2;
-  ctx.fillStyle = "rgba(255, 42, 42, 0.9)";
+  ctx.globalAlpha = 0.2 + pulse * 0.18;
+  ctx.fillStyle = "rgba(255, 104, 26, 0.9)";
   ctx.beginPath();
   ctx.arc(entity.x, y, entity.r + 20, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
-  drawRing(ctx, entity.x, y, entity.r + 15, `rgba(255, 72, 72, ${pulse})`, 4);
-  drawDangerMarks(ctx, entity.x, y, entity.r + 28, pulse);
-  ctx.fillStyle = `rgba(255, 82, 82, ${pulse + 0.15})`;
-  ctx.font = "900 20px Arial, Apple SD Gothic Neo, sans-serif";
+  drawRing(ctx, entity.x, y, entity.r + 14, `rgba(255, 132, 40, ${pulse})`, 4);
+  ctx.fillStyle = `rgba(255, 218, 92, ${pulse + 0.16})`;
+  ctx.font = "900 17px Arial, Apple SD Gothic Neo, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("!", entity.x, y - entity.r - 22);
+  ctx.fillText("LAVA", entity.x, y - entity.r - 23);
 }
 
-function drawDangerMarks(ctx, x, y, radius, alpha) {
+function drawHazardSignal(ctx, entity, y, time) {
   ctx.save();
-  ctx.strokeStyle = `rgba(255, 68, 68, ${alpha})`;
-  ctx.lineWidth = 3;
-  for (let i = 0; i < 4; i += 1) {
-    const a = i * Math.PI * 0.5;
-    const x1 = x + Math.cos(a) * (radius - 7);
-    const y1 = y + Math.sin(a) * (radius - 7);
-    const x2 = x + Math.cos(a) * (radius + 9);
-    const y2 = y + Math.sin(a) * (radius + 9);
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-  }
+  const pulse = 0.5 + Math.sin(time * 8) * 0.18;
+  ctx.shadowColor = `rgba(255, 72, 72, ${pulse})`;
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = `rgba(255, 74, 74, ${pulse + 0.12})`;
+  ctx.font = "900 18px Arial, Apple SD Gothic Neo, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("!", entity.x, y - entity.r - 20);
   ctx.restore();
 }
 

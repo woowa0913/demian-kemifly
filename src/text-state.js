@@ -9,6 +9,7 @@ export function renderGameToText(state) {
     },
     score: Math.floor(state.score),
     map: state.map,
+    lavaTimer: Number((state.lavaTimer || 0).toFixed(1)),
     level: state.level,
     itemsCollected: state.itemsCollected,
     energy: Math.floor(state.energy),

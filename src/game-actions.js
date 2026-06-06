@@ -13,6 +13,10 @@ export function emit(state, type) {
 }
 
 export function collect(state, item) {
+  if (item.lavaTrap) {
+    activateLavaTrap(state, item);
+    return;
+  }
   state.combo += 1;
   state.itemsCollected += 1;
   updateLevel(state, item);
@@ -20,12 +24,26 @@ export function collect(state, item) {
   state.score += (item.score + state.combo * 12) * scoreMultiplier(state);
   if (item.kind === "crystal" || item.kind === "goldCrystal") state.crystals += 1;
   if (item.heal) state.energy = Math.min(GAME.maxEnergy, state.energy + item.heal);
-  if (item.shield) state.shield = Math.min(3, state.shield + item.shield);
+  if (item.shield) {
+    state.shield = Math.min(3, state.shield + item.shield);
+    state.shieldFlash = 4.5;
+  }
   updateMissions(state, emit);
   state.effects.push({ x: item.x, y: item.y, text: `+${item.score}`, life: 0.7, good: true });
   if (item.shield) emit(state, "shield");
   else if (item.heal) emit(state, "heal");
   else emit(state, "collect");
+}
+
+function activateLavaTrap(state, item) {
+  item.collected = true;
+  state.combo = 0;
+  state.map = "lava";
+  state.lavaTimer = GAME.lavaDuration;
+  state.message = "용암 포탈!";
+  state.shake = 10;
+  state.effects.push({ x: item.x, y: item.y - 8, text: "LAVA!", life: 1, good: false });
+  emit(state, "damage");
 }
 
 function updateLevel(state, item) {
@@ -46,6 +64,7 @@ export function damage(state, amount, label) {
   if (state.shield > 0) {
     state.shield -= 1;
     state.message = "보호막!";
+    state.shieldFlash = 1.6;
     emit(state, "shield");
   } else {
     state.energy = Math.max(0, state.energy - amount);

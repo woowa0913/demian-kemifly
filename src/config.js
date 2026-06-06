@@ -6,13 +6,14 @@ export const GAME = Object.freeze({
   maxFall: 560,
   scrollSpeed: 205,
   scrollSpeedMaxBonus: 210,
+  lavaSpeedBonus: 150,
   spawnEvery: 1.35,
   itemEvery: 1.1,
   maxEnergy: 100,
   damageCooldown: 0.85,
   leaderboardSize: 10,
   storageKey: "kemi-fly-leaderboard-v1",
-  lavaDistance: 420,
+  lavaDuration: 12,
   levelThresholds: [0, 3, 7, 12, 18, 25],
 });
 
@@ -56,6 +57,7 @@ export const ASSET_PATHS = Object.freeze({
   hourglass: "./assets/item-hourglass.png",
   energyBolt: "./assets/item-energy-bolt.png",
   heart: "./assets/item-heart.png",
+  lavaPortal: "./assets/item-lava-portal.png",
   stoneIsland: "./assets/obstacle-stone-island.png",
   stoneCluster: "./assets/obstacle-stone-cluster.png",
   boulder: "./assets/obstacle-boulder.png",

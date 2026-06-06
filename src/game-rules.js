@@ -28,6 +28,7 @@ const ITEMS = Object.freeze([
   { kind: "hourglass", r: 25, score: 180, heal: 6 },
   { kind: "energyBolt", r: 24, score: 220, heal: 10 },
   { kind: "heart", r: 25, score: 100, heal: 22 },
+  { kind: "lavaPortal", r: 27, score: 0, lavaTrap: true },
 ]);
 
 export function createPlayer(view = GAME) {
@@ -54,7 +55,7 @@ function getObstacleY(base, view, top) {
 }
 
 export function spawnItem(state) {
-  const base = securePick(ITEMS);
+  const base = shouldSpawnLavaPortal(state) ? ITEMS.find((item) => item.kind === "lavaPortal") : securePick(ITEMS.filter((item) => item.kind !== "lavaPortal"));
   const view = getView(state);
   const top = view.portrait ? 214 : 132;
   state.items.push({
@@ -64,6 +65,11 @@ export function spawnItem(state) {
     wobble: secureRange(0, Math.PI * 2),
     collected: false,
   });
+}
+
+function shouldSpawnLavaPortal(state) {
+  if (state.map === "lava" || state.lavaTimer > 0 || state.time < 8) return false;
+  return secureRange(0, 1) > 0.78;
 }
 
 export function intersects(a, b) {

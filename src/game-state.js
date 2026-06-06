@@ -17,12 +17,14 @@ export function createGameState() {
     score: 0,
     distance: 0,
     map: "sky",
+    lavaTimer: 0,
     crystals: 0,
     itemsCollected: 0,
     level: 1,
     levelFlash: 0,
     energy: GAME.maxEnergy,
     shield: 0,
+    shieldFlash: 0,
     combo: 0,
     fever: 0,
     feverTime: 0,
@@ -53,12 +55,14 @@ export function startRun(state) {
     score: 0,
     distance: 0,
     map: "sky",
+    lavaTimer: 0,
     crystals: 0,
     itemsCollected: 0,
     level: 1,
     levelFlash: 0,
     energy: GAME.maxEnergy,
     shield: 0,
+    shieldFlash: 0,
     combo: 0,
     fever: 0,
     feverTime: 0,
@@ -100,6 +104,9 @@ export function updateState(state, dt) {
   state.time += step;
   state.damageTimer = Math.max(0, state.damageTimer - step);
   state.feverTime = Math.max(0, state.feverTime - step);
+  state.lavaTimer = Math.max(0, state.lavaTimer - step);
+  state.shieldFlash = Math.max(0, state.shieldFlash - step);
+  state.map = state.lavaTimer > 0 ? "lava" : "sky";
   state.levelFlash = Math.max(0, state.levelFlash - step);
   updatePlayer(state, step);
   updateSpawns(state, step);
@@ -156,7 +163,8 @@ function updateSpawns(state, dt) {
 }
 
 function updateEntities(state, dt) {
-  const speed = GAME.scrollSpeed + Math.min(GAME.scrollSpeedMaxBonus, state.time * 7.5 + state.distance * 0.08);
+  const lavaBoost = state.map === "lava" ? GAME.lavaSpeedBonus : 0;
+  const speed = GAME.scrollSpeed + lavaBoost + Math.min(GAME.scrollSpeedMaxBonus, state.time * 7.5 + state.distance * 0.08);
   for (const group of [state.obstacles, state.items, state.effects]) {
     for (const entity of group) entity.x -= speed * dt;
   }
@@ -195,7 +203,6 @@ function updateCollisions(state) {
 
 function updateScore(state, dt) {
   state.distance += dt * 18;
-  state.map = state.distance >= GAME.lavaDistance ? "lava" : "sky";
   updateMissions(state, emit);
   state.score += (dt * 10 + state.combo * dt * 1.5) * scoreMultiplier(state);
 }

@@ -33,7 +33,7 @@ const IMAGE_BY_KIND = {
 export function drawWorld(ctx, state, assets) {
   const view = getView(state);
   const lava = state.map === "lava";
-  const image = lava ? assets.lavaBackground : assets.background;
+  const image = getBackgroundImage(state, assets, lava);
   drawBackground(ctx, image, state.clock || state.time, state.mode, view, lava);
   if (!["playing", "paused"].includes(state.mode)) return;
   ctx.save();
@@ -45,6 +45,13 @@ export function drawWorld(ctx, state, assets) {
   drawKemi(ctx, state, assets);
   for (const effect of state.effects) drawFloatText(ctx, effect);
   ctx.restore();
+}
+
+function getBackgroundImage(state, assets, lava) {
+  if (lava) return assets.lavaBackground || assets.background;
+  const stages = GAME.stages || [];
+  const stage = stages[Math.max(0, Math.min(stages.length - 1, state.stageIndex || 0))];
+  return assets[stage?.backgroundKey] || assets.background;
 }
 
 export function drawImageCentered(ctx, image, x, y, w, h) {
@@ -62,6 +69,7 @@ export function drawImageFitCentered(ctx, image, x, y, maxW, maxH) {
 
 function drawBackground(ctx, image, time, mode, view, lava) {
   ctx.clearRect(0, 0, view.width, view.height);
+  if (!image) return;
   if (mode === "menu") {
     drawMenuBackground(ctx, image, time, view);
     return;

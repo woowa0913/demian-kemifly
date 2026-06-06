@@ -1,4 +1,4 @@
-const CACHE_NAME = "kemi-fly-v19";
+const CACHE_NAME = "kemi-fly-v20";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -30,7 +30,12 @@ const CORE_ASSETS = [
   "./assets/sfx/09-fever-combo.wav",
   "./assets/sfx/10-game-over-gentle.wav",
   "./assets/sfx/11-button-start.wav",
+  "./assets/sky-background.png",
   "./assets/lava-background.png",
+  "./assets/stage-grass-background.png",
+  "./assets/stage-desert-background.png",
+  "./assets/stage-burst-effect.png",
+  "./assets/stage-badge-ui.png",
   "./assets/kemi-lv1-frame-1.png",
   "./assets/kemi-lv2-frame-1.png",
   "./assets/kemi-lv3-frame-1.png",

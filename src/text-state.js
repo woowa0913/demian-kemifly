@@ -18,6 +18,9 @@ export function renderGameToText(state) {
     saved: state.saved,
     level: state.level,
     maxLevel: state.maxLevel || state.level,
+    stageIndex: state.stageIndex || 0,
+    stageLabel: getStageLabel(state),
+    stageReveal: Number((state.stageReveal || 0).toFixed(1)),
     routePhase: state.routePhase || 0,
     routeLabel: getRouteLabel(state),
     levelReveal: Number((state.levelReveal || 0).toFixed(1)),
@@ -65,6 +68,12 @@ function getRouteLabel(state) {
   const phases = GAME.routePhases || [];
   const phase = phases[Math.max(0, Math.min(phases.length - 1, state.routePhase || 0))];
   return phase ? phase.label : "";
+}
+
+function getStageLabel(state) {
+  const stages = GAME.stages || [];
+  const stage = stages[Math.max(0, Math.min(stages.length - 1, state.stageIndex || 0))];
+  return stage ? stage.label : "";
 }
 
 function roundEntity(entity) {

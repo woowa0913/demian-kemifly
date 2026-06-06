@@ -6,16 +6,16 @@ import { drawImageCentered, drawImageFitCentered, drawWorld } from "./world-rend
 export function render(ctx, state, assets) {
   state.buttons = [];
   drawWorld(ctx, state, assets);
-  drawHud(ctx, state);
+  drawHud(ctx, state, assets);
   if (state.mode === "playing" || state.mode === "paused") drawDangerTelegraphs(ctx, state);
-  if (state.mode === "playing") drawRunMoments(ctx, state);
+  if (state.mode === "playing") drawRunMoments(ctx, state, assets);
   if (state.mode === "menu") drawMenu(ctx, state, assets);
   if (state.mode === "paused") drawPause(ctx, state);
   if (state.mode === "gameover") drawGameOver(ctx, state, assets);
   if (state.mode === "hall") drawHall(ctx, state, assets);
 }
 
-function drawHud(ctx, state) {
+function drawHud(ctx, state, assets) {
   if (state.mode === "menu" || state.mode === "hall" || state.mode === "gameover") return;
   const view = getView(state);
   const top = view.portrait ? 18 : 18;
@@ -31,13 +31,13 @@ function drawHud(ctx, state) {
   label(ctx, "ENERGY", view.width - energyW + 2, 45, 15, "#9af7ff", "700");
   drawBar(ctx, view.width - energyW + 2, 58, energyW - 52, 16, state.energy / GAME.maxEnergy);
   label(ctx, `SHIELD ${state.shield}`, view.width - 74, 89, 13, "#ffd76b", "800", "center");
-  drawProgressHud(ctx, state, view);
+  drawProgressHud(ctx, state, view, assets);
   drawActiveChips(ctx, state, view);
   iconButton(ctx, state, "pause", state.mode === "paused" ? "▶" : "Ⅱ", pauseX, soundY, 46, 42);
   smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", soundX, soundY, 136, 42);
 }
 
-function drawProgressHud(ctx, state, view) {
+function drawProgressHud(ctx, state, view, assets) {
   const x = view.portrait ? 20 : 286;
   const y = view.portrait ? 108 : 18;
   const w = view.portrait ? view.width - 40 : 326;
@@ -52,7 +52,10 @@ function drawProgressHud(ctx, state, view) {
   label(ctx, text, x + 18, y + 63, 13, mission.done ? "#78ffca" : "#d9fbff", "800");
   if (state.map === "lava") label(ctx, `LAVA ${Math.ceil(state.lavaTimer)}s x${GAME.lavaScoreMultiplier}`, x + w - 18, y + 24, 13, "#ffb357", "900", "right");
   else if (state.boostTime > 0) label(ctx, `BOOST ${Math.ceil(state.boostTime)}s`, x + w - 18, y + 24, 13, "#ffd76b", "900", "right");
-  else label(ctx, getRoutePhase(state).label, x + w - 18, y + 24, 13, "#9af7ff", "900", "right");
+  else {
+    if (assets?.stageBadge) drawImageFit(ctx, assets.stageBadge, x + w - 26, y + 24, 28, 28);
+    label(ctx, getStageHudLabel(state), x + w - 46, y + 24, 13, "#9af7ff", "900", "right");
+  }
 }
 
 function getLevelProgressText(state) {
@@ -83,11 +86,18 @@ function getActiveChips(state) {
   return chips;
 }
 
-function drawRunMoments(ctx, state) {
+function drawRunMoments(ctx, state, assets) {
   const view = getView(state);
+  if (state.stageReveal > 0) {
+    const stage = getStage(state);
+    const y = view.portrait ? 238 : 142;
+    const alpha = Math.min(0.92, state.stageReveal / 0.9);
+    drawStageBurst(ctx, assets?.stageBurst, view.width / 2, y, alpha);
+    drawMomentBanner(ctx, view.width / 2, y, stage.label, stage.detail, "#ffd76b", alpha);
+  }
   if (state.routeReveal > 0) {
     const phase = getRoutePhase(state);
-    const y = view.portrait ? 264 : 132;
+    const y = view.portrait ? 294 : 212;
     drawMomentBanner(ctx, view.width / 2, y, phase.label, phase.detail, "#9af7ff", Math.min(0.86, state.routeReveal / 0.8));
   }
   if (state.levelReveal > 0) {
@@ -134,6 +144,17 @@ function getRoutePhase(state) {
   return phases[Math.max(0, Math.min(phases.length - 1, state.routePhase || 0))];
 }
 
+function getStage(state) {
+  const stages = GAME.stages || [{ label: "STAGE 1", detail: "비행 항로", backgroundKey: "background" }];
+  return stages[Math.max(0, Math.min(stages.length - 1, state.stageIndex || 0))];
+}
+
+function getStageHudLabel(state) {
+  const stage = getStage(state);
+  const labelText = stage.label.replace("STAGE ", "S");
+  return `${labelText} · ${getRoutePhase(state).label}`;
+}
+
 function getLevelPerkText(level) {
   if (level >= 6) return "MAX 성장 · 피격 판정 최소화";
   if (level >= 5) return "실드 한도 증가";
@@ -152,6 +173,16 @@ function drawMomentBanner(ctx, x, y, titleText, detail, color, alpha) {
   ctx.shadowBlur = 0;
   label(ctx, titleText, x, y - 8, 20, "#ffffff", "900", "center");
   label(ctx, detail, x, y + 15, 12, color, "900", "center");
+  ctx.restore();
+}
+
+function drawStageBurst(ctx, image, x, y, alpha) {
+  if (!image) return;
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, Math.min(0.7, alpha * 0.72));
+  ctx.shadowColor = "rgba(255, 215, 107, 0.65)";
+  ctx.shadowBlur = 24;
+  drawImageFitCentered(ctx, image, x, y + 8, 260, 190);
   ctx.restore();
 }
 

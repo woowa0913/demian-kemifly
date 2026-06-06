@@ -39,6 +39,8 @@ export function createGameState() {
     lastComboReward: 0,
     fever: 0,
     feverTime: 0,
+    stageIndex: 0,
+    stageReveal: 0,
     routePhase: 0,
     routeReveal: 0,
     nearMisses: 0,
@@ -93,6 +95,8 @@ export function startRun(state) {
     lastComboReward: 0,
     fever: 0,
     feverTime: 0,
+    stageIndex: 0,
+    stageReveal: 0,
     routePhase: 0,
     routeReveal: 0,
     nearMisses: 0,
@@ -154,12 +158,14 @@ export function updateState(state, dt) {
   state.map = state.lavaTimer > 0 ? "lava" : "sky";
   state.levelFlash = Math.max(0, state.levelFlash - step);
   state.levelReveal = Math.max(0, state.levelReveal - step);
+  state.stageReveal = Math.max(0, state.stageReveal - step);
   state.routeReveal = Math.max(0, state.routeReveal - step);
   updatePlayer(state, step);
   updateSpawns(state, step);
   updateEntities(state, step);
   updateCollisions(state);
   updateScore(state, step);
+  updateStage(state);
   updateRoutePhase(state);
   state.shake = Math.max(0, state.shake - step * 12);
   if (state.energy <= 0) finishRun(state, "에너지가 모두 소진됐어요");
@@ -283,6 +289,21 @@ function updateRoutePhase(state) {
   state.score += 140 + next * 60;
   state.effects.push({ x: state.player.x + 92, y: state.player.y - 92, text: phases[next].label, life: 1.2, good: true });
   emit(state, "gold");
+}
+
+function updateStage(state) {
+  const stages = GAME.stages || [];
+  let next = 0;
+  for (let i = 0; i < stages.length; i += 1) {
+    if (state.distance >= stages[i].distance) next = i;
+  }
+  if (next <= (state.stageIndex || 0)) return;
+  state.stageIndex = next;
+  state.stageReveal = 2.2;
+  state.message = stages[next].label;
+  state.score += 240 + next * 120;
+  state.effects.push({ x: state.player.x + 96, y: state.player.y - 104, text: stages[next].label, life: 1.35, good: true });
+  emit(state, "levelup");
 }
 
 function applyMagnet(state, dt) {

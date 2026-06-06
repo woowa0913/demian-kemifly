@@ -55,6 +55,7 @@ export function updateMissions(state, emit) {
 
 function completeMission(state, mission, emit) {
   mission.done = true;
+  state.missionsCompleted = (state.missionsCompleted || 0) + 1;
   state.score += 500;
   state.effects.push({ x: state.player.x + 82, y: state.player.y - 86, text: "MISSION +500", life: 1, good: true });
   emit(state, "collect");

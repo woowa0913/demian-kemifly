@@ -7,6 +7,7 @@ export function render(ctx, state, assets) {
   state.buttons = [];
   drawWorld(ctx, state, assets);
   drawHud(ctx, state);
+  if (state.mode === "playing") drawRunMoments(ctx, state);
   if (state.mode === "menu") drawMenu(ctx, state, assets);
   if (state.mode === "paused") drawPause(ctx, state);
   if (state.mode === "gameover") drawGameOver(ctx, state, assets);
@@ -80,6 +81,40 @@ function getActiveChips(state) {
   return chips;
 }
 
+function drawRunMoments(ctx, state) {
+  const view = getView(state);
+  if (state.levelReveal > 0) {
+    const alpha = Math.min(1, state.levelReveal / 0.8);
+    drawMomentBanner(ctx, view.width / 2, view.height * 0.34, `LV ${state.level}`, getLevelPerkText(state.level), "#ffd76b", alpha);
+  }
+  if (state.map === "lava" && state.lavaTimer > 0) {
+    const y = view.portrait ? 222 : 112;
+    const text = `용암 챌린지 ${Math.ceil(state.lavaTimer)}초`;
+    drawMomentBanner(ctx, view.width / 2, y, text, `생존하면 +450 · 점수 x${GAME.lavaScoreMultiplier}`, "#ff9a44", 0.82);
+  }
+}
+
+function getLevelPerkText(level) {
+  if (level >= 6) return "MAX 성장 · 피격 판정 최소화";
+  if (level >= 5) return "실드 한도 증가";
+  if (level >= 4) return "조작 안정성 향상";
+  if (level >= 3) return "보너스 실드 획득";
+  return "피격 내성 상승";
+}
+
+function drawMomentBanner(ctx, x, y, titleText, detail, color, alpha) {
+  const w = Math.min(410, ctx.canvas.width - 54);
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 20;
+  roundRect(ctx, x - w / 2, y - 30, w, 60, 10, "rgba(4, 18, 42, 0.72)", color);
+  ctx.shadowBlur = 0;
+  label(ctx, titleText, x, y - 8, 20, "#ffffff", "900", "center");
+  label(ctx, detail, x, y + 15, 12, color, "900", "center");
+  ctx.restore();
+}
+
 function drawMenu(ctx, state, assets) {
   const view = getView(state);
   const cx = view.width / 2;
@@ -94,7 +129,28 @@ function drawMenu(ctx, state, assets) {
   button(ctx, state, "hall", "명예의 전당", cx - 132, startY + 78, 264, 60);
   if (view.portrait) smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", cx - 70, startY + 170, 140, 44);
   else smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", view.width - 172, 34, 134, 42);
-  label(ctx, view.portrait ? "TAP TO FLY" : "SPACE / TAP", cx, view.portrait ? startY + 244 : 505, 15, "#d9fbff", "700", "center");
+  drawMenuMotivation(ctx, state, cx, view.portrait ? startY + 228 : 470, view);
+}
+
+function drawMenuMotivation(ctx, state, x, y, view) {
+  const best = state.leaderboard[0]?.score || 0;
+  const line = getMenuLine(state);
+  const target = best > 0 ? `최고 기록 ${best} · 다음 목표 ${best + 800}` : "첫 기록을 명예의 전당에 남겨봐요";
+  const hint = view.portrait ? "TAP" : "SPACE/TAP";
+  const w = view.portrait ? Math.min(330, view.width - 70) : 390;
+  drawPanel(ctx, x - w / 2, y, w, 44, 0.34);
+  label(ctx, line, x, y + 15, view.portrait ? 14 : 15, "#ffffff", "900", "center");
+  label(ctx, `${target} · ${hint}`, x, y + 32, 12, "#9af7ff", "800", "center");
+}
+
+function getMenuLine(state) {
+  const lines = [
+    "오늘은 더 높이 날아볼까요?",
+    "수정 에너지가 하늘섬을 깨워요",
+    "용암 포탈은 위험하지만 보상이 커요",
+    "근접 회피로 피버를 빠르게 채워봐요",
+  ];
+  return lines[Math.floor((state.clock || 0) / 3) % lines.length];
 }
 
 function drawMenuKemi(ctx, state, assets, x, y, view) {
@@ -137,13 +193,32 @@ function drawGameOver(ctx, state, assets) {
   const buttonY = view.portrait ? 498 : 376;
   drawScrim(ctx, 0.5);
   drawImageCentered(ctx, assets.gameOverBanner, cx, bannerY, 320, 120);
-  drawPanel(ctx, cx - 230, panelY, 460, 168, 0.72);
+  drawPanel(ctx, cx - 236, panelY, 472, 214, 0.74);
   label(ctx, `점수 ${Math.floor(state.score)}`, cx, panelY + 42, 34, "#ffffff", "900", "center");
   label(ctx, `${getTitle(state.score)} · 거리 ${state.distance} · 수정 ${state.crystals}`, cx, panelY + 84, 18, "#9af7ff", "800", "center");
+  drawRunSummary(ctx, state, cx, panelY + 122);
   const prompt = state.saved ? "기록 완료! 명예의 전당에서 확인하세요" : "명예의 전당에 기록할 이름을 입력하세요";
-  label(ctx, state.isRecord ? state.message || prompt : state.message, cx, panelY + 126, 17, "#ffd76b", "800", "center");
+  if (!(state.isRecord && !state.saved)) {
+    label(ctx, state.isRecord ? state.message || prompt : state.message, cx, panelY + 188, 16, "#ffd76b", "800", "center");
+  }
   button(ctx, state, state.isRecord && !state.saved ? "save" : "restart", state.isRecord && !state.saved ? "기록 저장" : "RETRY", cx - 136, buttonY, 272, 62);
   button(ctx, state, "hall", "명예의 전당", cx - 136, buttonY + 76, 272, 58);
+}
+
+function drawRunSummary(ctx, state, cx, y) {
+  const summary = state.runSummary || {};
+  const gapText = summary.bestGap > 0 ? `최고 기록까지 ${summary.bestGap}` : "새로운 최고 기록!";
+  const nextText = summary.nextLevelNeed > 0 ? `다음 LV까지 ${summary.nextLevelNeed}개` : "MAX LV 도달";
+  const rows = [
+    [`콤보 ${summary.bestCombo || 0}`, `최고 LV ${summary.maxLevel || state.level || 1}`],
+    [`용암 ${summary.lavaSurvival || 0}초`, `미션 ${summary.missionsCompleted || 0}개`],
+    [gapText, nextText],
+  ];
+  for (let i = 0; i < rows.length; i += 1) {
+    const rowY = y + i * 21;
+    label(ctx, rows[i][0], cx - 104, rowY, 13, i === 2 ? "#ffd76b" : "#d9fbff", "900", "center");
+    label(ctx, rows[i][1], cx + 104, rowY, 13, i === 2 ? "#ffd76b" : "#d9fbff", "900", "center");
+  }
 }
 
 function drawHall(ctx, state, assets) {

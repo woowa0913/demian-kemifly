@@ -11,7 +11,10 @@ export function renderGameToText(state) {
     map: state.map,
     lavaTimer: Number((state.lavaTimer || 0).toFixed(1)),
     lavaRuns: state.lavaRuns || 0,
+    lavaSurvival: Number((state.lavaSurvival || 0).toFixed(1)),
     level: state.level,
+    maxLevel: state.maxLevel || state.level,
+    levelReveal: Number((state.levelReveal || 0).toFixed(1)),
     itemsCollected: state.itemsCollected,
     energy: Math.floor(state.energy),
     shield: state.shield,
@@ -25,6 +28,7 @@ export function renderGameToText(state) {
     fever: Math.round(state.fever),
     feverTime: Number(state.feverTime.toFixed(1)),
     message: state.message,
+    runSummary: state.runSummary,
     missions: state.missions.map((mission) => ({
       label: mission.label,
       progress: Math.floor(mission.progress),

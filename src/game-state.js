@@ -19,10 +19,14 @@ export function createGameState() {
     map: "sky",
     lavaTimer: 0,
     lavaRuns: 0,
+    lavaSurvival: 0,
+    lastLavaSurvival: 0,
     crystals: 0,
     itemsCollected: 0,
     level: 1,
+    maxLevel: 1,
     levelFlash: 0,
+    levelReveal: 0,
     energy: GAME.maxEnergy,
     shield: 0,
     shieldFlash: 0,
@@ -36,7 +40,9 @@ export function createGameState() {
     feverTime: 0,
     nearMisses: 0,
     missionTier: 0,
+    missionsCompleted: 0,
     missions: createMissions(),
+    runSummary: null,
     message: "",
     saved: false,
     isRecord: false,
@@ -64,10 +70,14 @@ export function startRun(state) {
     map: "sky",
     lavaTimer: 0,
     lavaRuns: 0,
+    lavaSurvival: 0,
+    lastLavaSurvival: 0,
     crystals: 0,
     itemsCollected: 0,
     level: 1,
+    maxLevel: 1,
     levelFlash: 0,
+    levelReveal: 0,
     energy: GAME.maxEnergy,
     shield: 0,
     shieldFlash: 0,
@@ -81,8 +91,10 @@ export function startRun(state) {
     feverTime: 0,
     nearMisses: 0,
     missionTier: 0,
+    missionsCompleted: 0,
     missions: createMissions(),
     message: "",
+    runSummary: null,
     saved: false,
     isRecord: false,
     player: createPlayer(getView(state)),
@@ -119,6 +131,15 @@ export function updateState(state, dt) {
   state.damageTimer = Math.max(0, state.damageTimer - step);
   state.feverTime = Math.max(0, state.feverTime - step);
   state.lavaTimer = Math.max(0, state.lavaTimer - step);
+  if (state.map === "lava") state.lavaSurvival += step;
+  if (state.map === "lava" && state.lavaTimer <= 0) {
+    state.lastLavaSurvival = Math.max(state.lastLavaSurvival, state.lavaSurvival);
+    state.lavaSurvival = 0;
+    state.message = "용암 돌파!";
+    state.score += 450;
+    state.effects.push({ x: state.player.x + 74, y: state.player.y - 72, text: "LAVA CLEAR +450", life: 1.2, good: true });
+    emit(state, "gold");
+  }
   state.shieldFlash = Math.max(0, state.shieldFlash - step);
   state.magnetTime = Math.max(0, state.magnetTime - step);
   state.slowTime = Math.max(0, state.slowTime - step);
@@ -126,6 +147,7 @@ export function updateState(state, dt) {
   state.boostTime = Math.max(0, state.boostTime - step);
   state.map = state.lavaTimer > 0 ? "lava" : "sky";
   state.levelFlash = Math.max(0, state.levelFlash - step);
+  state.levelReveal = Math.max(0, state.levelReveal - step);
   updatePlayer(state, step);
   updateSpawns(state, step);
   updateEntities(state, step);
@@ -213,8 +235,15 @@ function updateCollisions(state) {
       state.bestCombo = Math.max(state.bestCombo || 0, state.combo);
       addFever(state, 10, emit);
       updateMissions(state, emit);
-      state.score += (90 + state.combo * 8) * scoreMultiplier(state);
-      state.effects.push({ x: state.player.x + 24, y: state.player.y - 46, text: "NEAR +90", life: 0.7, good: true });
+      const dodgeScore = state.combo >= 3 ? 150 + state.combo * 12 : 90 + state.combo * 8;
+      state.score += dodgeScore * scoreMultiplier(state);
+      state.effects.push({
+        x: state.player.x + 24,
+        y: state.player.y - 46,
+        text: state.combo >= 3 ? `PERFECT +${dodgeScore}` : `NEAR +${dodgeScore}`,
+        life: 0.8,
+        good: true,
+      });
       emit(state, "near");
     }
   }

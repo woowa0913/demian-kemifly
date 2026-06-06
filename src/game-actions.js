@@ -65,7 +65,9 @@ function updateLevel(state, item) {
   }, 1);
   if (next <= state.level) return;
   state.level = Math.min(6, next);
+  state.maxLevel = Math.max(state.maxLevel || 1, state.level);
   state.levelFlash = 1.2;
+  state.levelReveal = 1.45;
   state.score += state.level * 180;
   state.energy = Math.min(GAME.maxEnergy, state.energy + 8);
   if (state.level >= 3 && state.level % 2 === 1) {
@@ -100,6 +102,8 @@ export function finishRun(state, reason) {
   state.distance = Math.floor(state.distance);
   state.message = reason;
   state.leaderboard = loadLeaderboard();
+  state.lastLavaSurvival = Math.max(state.lastLavaSurvival || 0, state.lavaSurvival || 0);
+  state.runSummary = buildRunSummary(state);
   state.isRecord = qualifiesForLeaderboard(state.score);
   state.effects.push({ x: state.player.x + 52, y: state.player.y - 40, text: getTitle(state.score), life: 1, good: false });
   emit(state, "gameover");
@@ -117,4 +121,20 @@ function getItemEffectText(item) {
 
 function maxShieldForLevel(state) {
   return Math.min(5, 2 + Math.floor((state.level || 1) / 2));
+}
+
+function buildRunSummary(state) {
+  const best = state.leaderboard[0]?.score || 0;
+  const nextLevelIndex = Math.max(1, Math.min(5, state.level || 1));
+  const nextLevelNeed = state.level >= 6 ? 0 : Math.max(0, GAME.levelThresholds[nextLevelIndex] - state.itemsCollected);
+  return {
+    score: state.score,
+    bestGap: Math.max(0, best - state.score),
+    bestCombo: state.bestCombo || state.combo || 0,
+    maxLevel: state.maxLevel || state.level || 1,
+    nextLevelNeed,
+    lavaSurvival: Math.floor(state.lastLavaSurvival || 0),
+    missionsCompleted: state.missionsCompleted || 0,
+    title: getTitle(state.score),
+  };
 }

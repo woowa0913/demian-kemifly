@@ -18,6 +18,7 @@ export function createGameState() {
     distance: 0,
     map: "sky",
     lavaTimer: 0,
+    lavaRuns: 0,
     crystals: 0,
     itemsCollected: 0,
     level: 1,
@@ -25,10 +26,16 @@ export function createGameState() {
     energy: GAME.maxEnergy,
     shield: 0,
     shieldFlash: 0,
+    magnetTime: 0,
+    slowTime: 0,
+    glideTime: 0,
+    boostTime: 0,
     combo: 0,
+    bestCombo: 0,
     fever: 0,
     feverTime: 0,
     nearMisses: 0,
+    missionTier: 0,
     missions: createMissions(),
     message: "",
     saved: false,
@@ -56,6 +63,7 @@ export function startRun(state) {
     distance: 0,
     map: "sky",
     lavaTimer: 0,
+    lavaRuns: 0,
     crystals: 0,
     itemsCollected: 0,
     level: 1,
@@ -63,10 +71,16 @@ export function startRun(state) {
     energy: GAME.maxEnergy,
     shield: 0,
     shieldFlash: 0,
+    magnetTime: 0,
+    slowTime: 0,
+    glideTime: 0,
+    boostTime: 0,
     combo: 0,
+    bestCombo: 0,
     fever: 0,
     feverTime: 0,
     nearMisses: 0,
+    missionTier: 0,
     missions: createMissions(),
     message: "",
     saved: false,
@@ -106,6 +120,10 @@ export function updateState(state, dt) {
   state.feverTime = Math.max(0, state.feverTime - step);
   state.lavaTimer = Math.max(0, state.lavaTimer - step);
   state.shieldFlash = Math.max(0, state.shieldFlash - step);
+  state.magnetTime = Math.max(0, state.magnetTime - step);
+  state.slowTime = Math.max(0, state.slowTime - step);
+  state.glideTime = Math.max(0, state.glideTime - step);
+  state.boostTime = Math.max(0, state.boostTime - step);
   state.map = state.lavaTimer > 0 ? "lava" : "sky";
   state.levelFlash = Math.max(0, state.levelFlash - step);
   updatePlayer(state, step);
@@ -133,7 +151,10 @@ export function showHall(state) {
 function updatePlayer(state, dt) {
   const player = state.player;
   const view = getView(state);
-  player.vy = Math.min(GAME.maxFall, player.vy + GAME.gravity * dt);
+  const level = Math.max(1, Math.min(6, state.level || 1));
+  const gravityScale = state.glideTime > 0 ? 0.72 : 1;
+  player.r = Math.max(19, 24 - Math.floor((level - 1) / 2));
+  player.vy = Math.min(GAME.maxFall, player.vy + GAME.gravity * gravityScale * dt);
   player.y += player.vy * dt;
   player.frameKick = Math.max(0, player.frameKick - dt);
   const topLimit = view.portrait ? 204 : 116;
@@ -164,10 +185,12 @@ function updateSpawns(state, dt) {
 
 function updateEntities(state, dt) {
   const lavaBoost = state.map === "lava" ? GAME.lavaSpeedBonus : 0;
-  const speed = GAME.scrollSpeed + lavaBoost + Math.min(GAME.scrollSpeedMaxBonus, state.time * 7.5 + state.distance * 0.08);
+  const slowScale = state.slowTime > 0 ? 0.72 : 1;
+  const speed = (GAME.scrollSpeed + lavaBoost + Math.min(GAME.scrollSpeedMaxBonus, state.time * 7.5 + state.distance * 0.08)) * slowScale;
   for (const group of [state.obstacles, state.items, state.effects]) {
     for (const entity of group) entity.x -= speed * dt;
   }
+  applyMagnet(state, dt);
   state.obstacles = state.obstacles.filter((entity) => entity.x > -120);
   state.items = state.items.filter((entity) => entity.x > -90 && !entity.collected);
   state.effects = state.effects.filter((entity) => entity.life > 0);
@@ -187,6 +210,7 @@ function updateCollisions(state) {
     if (Math.abs(obstacle.y - state.player.y) < 96) {
       state.combo += 1;
       state.nearMisses += 1;
+      state.bestCombo = Math.max(state.bestCombo || 0, state.combo);
       addFever(state, 10, emit);
       updateMissions(state, emit);
       state.score += (90 + state.combo * 8) * scoreMultiplier(state);
@@ -205,4 +229,19 @@ function updateScore(state, dt) {
   state.distance += dt * 18;
   updateMissions(state, emit);
   state.score += (dt * 10 + state.combo * dt * 1.5) * scoreMultiplier(state);
+}
+
+function applyMagnet(state, dt) {
+  if (state.magnetTime <= 0) return;
+  const range = 210 + state.level * 10;
+  for (const item of state.items) {
+    if (item.lavaTrap || item.collected) continue;
+    const dx = state.player.x - item.x;
+    const dy = state.player.y - item.y;
+    const distance = Math.hypot(dx, dy);
+    if (distance <= 0 || distance > range) continue;
+    const pull = Math.min(distance, (420 + state.level * 28) * dt);
+    item.x += (dx / distance) * pull;
+    item.y += (dy / distance) * pull;
+  }
 }

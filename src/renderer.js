@@ -30,6 +30,7 @@ function drawHud(ctx, state) {
   drawBar(ctx, view.width - energyW + 2, 58, energyW - 52, 16, state.energy / GAME.maxEnergy);
   label(ctx, `SHIELD ${state.shield}`, view.width - 74, 89, 13, "#ffd76b", "800", "center");
   drawProgressHud(ctx, state, view);
+  drawActiveChips(ctx, state, view);
   iconButton(ctx, state, "pause", state.mode === "paused" ? "▶" : "Ⅱ", pauseX, soundY, 46, 42);
   smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", soundX, soundY, 136, 42);
 }
@@ -47,7 +48,8 @@ function drawProgressHud(ctx, state, view) {
   const levelText = getLevelProgressText(state);
   const text = mission.done ? levelText : `${mission.label} ${progress}/${mission.target} · ${levelText}`;
   label(ctx, text, x + 18, y + 63, 13, mission.done ? "#78ffca" : "#d9fbff", "800");
-  if (state.map === "lava") label(ctx, `LAVA ${Math.ceil(state.lavaTimer)}s`, x + w - 18, y + 24, 13, "#ffb357", "900", "right");
+  if (state.map === "lava") label(ctx, `LAVA ${Math.ceil(state.lavaTimer)}s x${GAME.lavaScoreMultiplier}`, x + w - 18, y + 24, 13, "#ffb357", "900", "right");
+  else if (state.boostTime > 0) label(ctx, `BOOST ${Math.ceil(state.boostTime)}s`, x + w - 18, y + 24, 13, "#ffd76b", "900", "right");
 }
 
 function getLevelProgressText(state) {
@@ -55,6 +57,27 @@ function getLevelProgressText(state) {
   if (level >= 6) return "MAX LV";
   const next = GAME.levelThresholds[level];
   return `다음 LV ${state.itemsCollected}/${next}`;
+}
+
+function drawActiveChips(ctx, state, view) {
+  const chips = getActiveChips(state);
+  if (!chips.length) return;
+  const y = view.portrait ? 194 : 106;
+  let x = view.portrait ? 22 : 286;
+  for (const chip of chips.slice(0, view.portrait ? 3 : 4)) {
+    const w = Math.max(76, chip.text.length * 8 + 24);
+    chipBox(ctx, x, y, w, 28, chip.text, chip.color);
+    x += w + 8;
+  }
+}
+
+function getActiveChips(state) {
+  const chips = [];
+  if (state.magnetTime > 0) chips.push({ text: `자석 ${Math.ceil(state.magnetTime)}`, color: "#78ffca" });
+  if (state.slowTime > 0) chips.push({ text: `감속 ${Math.ceil(state.slowTime)}`, color: "#9af7ff" });
+  if (state.glideTime > 0) chips.push({ text: `활공 ${Math.ceil(state.glideTime)}`, color: "#d9fbff" });
+  if (state.boostTime > 0) chips.push({ text: `부스트 ${Math.ceil(state.boostTime)}`, color: "#ffd76b" });
+  return chips;
 }
 
 function drawMenu(ctx, state, assets) {
@@ -238,10 +261,18 @@ function drawPanel(ctx, x, y, w, h, alpha) {
   roundRect(ctx, x, y, w, h, 8, `rgba(4, 24, 58, ${alpha})`, "rgba(56, 232, 255, 0.72)");
 }
 
+function chipBox(ctx, x, y, w, h, text, color) {
+  ctx.save();
+  ctx.globalAlpha = 0.92;
+  roundRect(ctx, x, y, w, h, 7, "rgba(4, 24, 58, 0.72)", color);
+  label(ctx, text, x + w / 2, y + h / 2 + 1, 12, "#ffffff", "900", "center");
+  ctx.restore();
+}
+
 function drawBar(ctx, x, y, w, h, ratio, overrideColor = null) {
   roundRect(ctx, x, y, w, h, 7, "rgba(255,255,255,0.18)", "rgba(255,255,255,0.38)");
   const color = overrideColor || (ratio > 0.45 ? "#33eeff" : ratio > 0.22 ? "#ffd76b" : "#ff6b6b");
-  roundRect(ctx, x + 2, y + 2, Math.max(4, (w - 4) * ratio), h - 4, 5, color, color);
+  roundRect(ctx, x + 2, y + 2, Math.max(4, (w - 4) * Math.max(0, Math.min(1, ratio))), h - 4, 5, color, color);
 }
 
 function drawScrim(ctx, alpha) {

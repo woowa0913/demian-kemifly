@@ -2,13 +2,13 @@ import { GAME, TITLES } from "./config.js";
 
 const NAME_PATTERN = /[^\w가-힣ㄱ-ㅎㅏ-ㅣ -]/g;
 
-export function sanitizeName(value) {
+export function sanitizeName(value, fallback = true) {
   const text = String(value ?? "")
     .replace(NAME_PATTERN, "")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 8);
-  return text || "KEMI";
+  return text || (fallback ? "KEMI" : "");
 }
 
 export function hasValidName(value) {
@@ -45,11 +45,13 @@ export function qualifiesForLeaderboard(score) {
 }
 
 export function saveScore(name, stats) {
+  if (!hasValidName(name)) return loadLeaderboard();
   const board = mergeLeaderboard(loadLeaderboard(), buildRecord(name, stats));
   return storeLeaderboard(board);
 }
 
 export async function syncLeaderboardFromServer() {
+  if (!shouldUseRemoteLeaderboard()) return loadLeaderboard();
   try {
     const response = await fetch("/api/leaderboard", {
       method: "GET",
@@ -68,6 +70,8 @@ export async function syncLeaderboardFromServer() {
 }
 
 export async function saveScoreRemote(name, stats) {
+  if (!hasValidName(name)) return loadLeaderboard();
+  if (!shouldUseRemoteLeaderboard()) return loadLeaderboard();
   try {
     const response = await fetch("/api/leaderboard", {
       method: "POST",
@@ -92,7 +96,7 @@ export async function saveScoreRemote(name, stats) {
 function buildRecord(name, stats) {
   const score = Math.max(0, Math.floor(Number(stats.score) || 0));
   return {
-    name: sanitizeName(name),
+    name: sanitizeName(name, false),
     score,
     distance: Math.max(0, Math.floor(Number(stats.distance) || 0)),
     crystals: Math.max(0, Math.floor(Number(stats.crystals) || 0)),
@@ -130,4 +134,9 @@ function normalizeRecord(record) {
     title: sanitizeName(record.title || getTitle(score)),
     at: typeof record.at === "string" ? record.at : "",
   };
+}
+
+function shouldUseRemoteLeaderboard() {
+  const hostname = window.location.hostname;
+  return !["127.0.0.1", "localhost", "::1", ""].includes(hostname);
 }

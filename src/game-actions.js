@@ -22,17 +22,24 @@ export function collect(state, item) {
   state.combo += 1;
   state.itemsCollected += 1;
   updateLevel(state, item);
-  addFever(state, item.kind === "goldCrystal" || item.kind === "star" ? 18 : 12, emit);
+  addFever(state, item.fever || (item.kind === "goldCrystal" || item.kind === "star" ? 18 : 12), emit);
   state.score += (item.score + state.combo * 12) * scoreMultiplier(state);
   if (item.kind === "crystal" || item.kind === "goldCrystal") state.crystals += 1;
   if (item.heal) state.energy = Math.min(GAME.maxEnergy, state.energy + item.heal);
   if (item.shield) {
-    state.shield = Math.min(3, state.shield + item.shield);
+    state.shield = Math.min(maxShieldForLevel(state), state.shield + item.shield);
     state.shieldFlash = 4.5;
   }
+  if (item.magnet) state.magnetTime = Math.max(state.magnetTime, GAME.magnetDuration);
+  if (item.slow) state.slowTime = Math.max(state.slowTime, GAME.slowDuration);
+  if (item.glide) state.glideTime = Math.max(state.glideTime, GAME.glideDuration);
+  if (item.boost) state.boostTime = Math.max(state.boostTime, GAME.boostDuration);
   updateMissions(state, emit);
-  state.effects.push({ x: item.x, y: item.y, text: `+${item.score}`, life: 0.7, good: true });
+  state.effects.push({ x: item.x, y: item.y, text: getItemEffectText(item), life: 0.8, good: true });
   if (item.shield) emit(state, "shield");
+  else if (item.magnet) emit(state, "magnet");
+  else if (item.slow) emit(state, "slow");
+  else if (item.boost || item.glide) emit(state, "boost");
   else if (item.heal) emit(state, "heal");
   else if (GOLD_SOUND_ITEMS.has(item.kind)) emit(state, "gold");
   else emit(state, "collect");
@@ -43,10 +50,13 @@ function activateLavaTrap(state, item) {
   state.combo = 0;
   state.map = "lava";
   state.lavaTimer = GAME.lavaDuration;
-  state.message = "용암 포탈!";
+  state.lavaRuns = (state.lavaRuns || 0) + 1;
+  state.message = `용암 포탈! 점수 x${GAME.lavaScoreMultiplier}`;
   state.shake = 10;
-  state.effects.push({ x: item.x, y: item.y - 8, text: "LAVA!", life: 1, good: false });
-  emit(state, "damage");
+  state.score += 220;
+  state.effects.push({ x: item.x, y: item.y - 8, text: `RISK x${GAME.lavaScoreMultiplier}`, life: 1, good: false });
+  damage(state, 12, "용암 포탈");
+  emit(state, "lava");
 }
 
 function updateLevel(state, item) {
@@ -58,6 +68,10 @@ function updateLevel(state, item) {
   state.levelFlash = 1.2;
   state.score += state.level * 180;
   state.energy = Math.min(GAME.maxEnergy, state.energy + 8);
+  if (state.level >= 3 && state.level % 2 === 1) {
+    state.shield = Math.min(maxShieldForLevel(state), state.shield + 1);
+    state.shieldFlash = 2.4;
+  }
   state.effects.push({ x: item.x, y: item.y - 34, text: `LV ${state.level}!`, life: 1.1, good: true });
   emit(state, "levelup");
 }
@@ -70,9 +84,10 @@ export function damage(state, amount, label) {
     state.shieldFlash = 1.6;
     emit(state, "shield");
   } else {
-    state.energy = Math.max(0, state.energy - amount);
+    const reduced = Math.max(4, amount - Math.floor((state.level || 1) * 1.3));
+    state.energy = Math.max(0, state.energy - reduced);
     state.fever = Math.max(0, state.fever - 18);
-    state.message = `${label} -${amount}`;
+    state.message = `${label} -${reduced}`;
     state.shake = 8;
     emit(state, "damage");
   }
@@ -88,4 +103,18 @@ export function finishRun(state, reason) {
   state.isRecord = qualifiesForLeaderboard(state.score);
   state.effects.push({ x: state.player.x + 52, y: state.player.y - 40, text: getTitle(state.score), life: 1, good: false });
   emit(state, "gameover");
+}
+
+function getItemEffectText(item) {
+  if (item.magnet) return "MAGNET";
+  if (item.slow) return "SLOW";
+  if (item.glide) return "GLIDE";
+  if (item.boost) return "BOOST";
+  if (item.shield) return "SHIELD";
+  if (item.heal) return `+${item.heal} ENERGY`;
+  return `+${item.score}`;
+}
+
+function maxShieldForLevel(state) {
+  return Math.min(5, 2 + Math.floor((state.level || 1) / 2));
 }

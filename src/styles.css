@@ -46,6 +46,11 @@ canvas {
     align-items: start;
     padding-top: max(18px, env(safe-area-inset-top));
   }
+
+  .name-input {
+    height: 38px;
+    font-size: 18px;
+  }
 }
 
 .name-input {

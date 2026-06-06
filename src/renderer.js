@@ -15,7 +15,7 @@ export function render(ctx, state, assets) {
 }
 
 function drawHud(ctx, state) {
-  if (state.mode === "menu" || state.mode === "hall") return;
+  if (state.mode === "menu" || state.mode === "hall" || state.mode === "gameover") return;
   const view = getView(state);
   const top = view.portrait ? 18 : 18;
   const soundY = view.portrait ? view.height - 76 : view.height - 68;
@@ -188,21 +188,37 @@ function drawPause(ctx, state) {
 function drawGameOver(ctx, state, assets) {
   const view = getView(state);
   const cx = view.width / 2;
-  const bannerY = view.portrait ? 150 : 92;
-  const panelY = view.portrait ? 210 : 128;
-  const buttonY = view.portrait ? 498 : 376;
+  const bannerY = view.portrait ? 126 : 92;
+  const panelY = view.portrait ? 188 : 128;
+  const panelH = view.portrait ? 268 : 214;
+  const buttonY = view.portrait ? 610 : 376;
   drawScrim(ctx, 0.5);
-  drawImageCentered(ctx, assets.gameOverBanner, cx, bannerY, 320, 120);
-  drawPanel(ctx, cx - 236, panelY, 472, 214, 0.74);
+  drawImageCentered(ctx, assets.gameOverBanner, cx, bannerY, view.portrait ? 300 : 320, view.portrait ? 112 : 120);
+  drawPanel(ctx, cx - 236, panelY, 472, panelH, 0.74);
   label(ctx, `점수 ${Math.floor(state.score)}`, cx, panelY + 42, 34, "#ffffff", "900", "center");
   label(ctx, `${getTitle(state.score)} · 거리 ${state.distance} · 수정 ${state.crystals}`, cx, panelY + 84, 18, "#9af7ff", "800", "center");
   drawRunSummary(ctx, state, cx, panelY + 122);
   const prompt = state.saved ? "기록 완료! 명예의 전당에서 확인하세요" : "명예의 전당에 기록할 이름을 입력하세요";
   if (!(state.isRecord && !state.saved)) {
-    label(ctx, state.isRecord ? state.message || prompt : state.message, cx, panelY + 188, 16, "#ffd76b", "800", "center");
+    label(ctx, state.isRecord ? state.message || prompt : state.message, cx, panelY + panelH - 26, 16, "#ffd76b", "800", "center");
+  } else if (state.message) {
+    label(ctx, state.message, cx, panelY + panelH - 28, 16, "#ffd76b", "800", "center");
   }
-  button(ctx, state, state.isRecord && !state.saved ? "save" : "restart", state.isRecord && !state.saved ? "기록 저장" : "RETRY", cx - 136, buttonY, 272, 62);
-  button(ctx, state, "hall", "명예의 전당", cx - 136, buttonY + 76, 272, 58);
+  drawGameOverActions(ctx, state, view, cx, buttonY);
+}
+
+function drawGameOverActions(ctx, state, view, cx, y) {
+  const primaryAction = state.isRecord && !state.saved ? "save" : "restart";
+  const primaryText = state.isRecord && !state.saved ? "기록 저장" : "다시하기";
+  if (view.portrait) {
+    button(ctx, state, primaryAction, primaryText, cx - 230, y, 220, 58);
+    button(ctx, state, "hall", "명예의 전당", cx + 10, y, 220, 58);
+    button(ctx, state, "support", "데미안 지원하기", cx - 160, y + 72, 320, 54);
+    return;
+  }
+  button(ctx, state, primaryAction, primaryText, cx - 224, y, 216, 58);
+  button(ctx, state, "hall", "명예의 전당", cx + 8, y, 216, 58);
+  smallButton(ctx, state, "support", "데미안 지원하기", cx - 110, y + 72, 220, 44);
 }
 
 function drawRunSummary(ctx, state, cx, y) {

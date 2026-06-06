@@ -12,6 +12,8 @@ export function renderGameToText(state) {
     lavaTimer: Number((state.lavaTimer || 0).toFixed(1)),
     lavaRuns: state.lavaRuns || 0,
     lavaSurvival: Number((state.lavaSurvival || 0).toFixed(1)),
+    isRecord: state.isRecord,
+    saved: state.saved,
     level: state.level,
     maxLevel: state.maxLevel || state.level,
     levelReveal: Number((state.levelReveal || 0).toFixed(1)),

@@ -35,7 +35,7 @@ export function drawWorld(ctx, state, assets) {
   const lava = state.map === "lava";
   const image = lava ? assets.lavaBackground : assets.background;
   drawBackground(ctx, image, state.clock || state.time, state.mode, view, lava);
-  if (!["playing", "paused", "gameover"].includes(state.mode)) return;
+  if (!["playing", "paused"].includes(state.mode)) return;
   ctx.save();
   if (state.shake > 0) {
     ctx.translate(Math.sin(state.clock * 80) * state.shake, Math.cos(state.clock * 71) * state.shake);
@@ -76,11 +76,13 @@ function drawBackground(ctx, image, time, mode, view, lava) {
   }
   const speed = mode === "playing" ? (lava ? 28 : 18) : 6;
   const offset = (time * speed + view.width * 0.34) % (view.width * 2);
-  drawCoverTile(ctx, image, 0, 0, view.width, view.height, false);
+  if (view.portrait) drawPortraitBackground(ctx, image, time, view, lava, 1);
+  else drawCoverTile(ctx, image, 0, 0, view.width, view.height, false);
   ctx.save();
-  ctx.globalAlpha = 0.34;
-  for (let i = 0; i < 4; i += 1) {
-    drawCoverTile(ctx, image, -offset + i * view.width, 0, view.width, view.height, i % 2 === 1);
+  ctx.globalAlpha = view.portrait ? 0.2 : 0.34;
+  for (let i = 0; i < (view.portrait ? 3 : 4); i += 1) {
+    if (view.portrait) drawPortraitBackground(ctx, image, time + i * 7, view, lava, i % 2 === 1 ? 0.55 : 0.75);
+    else drawCoverTile(ctx, image, -offset + i * view.width, 0, view.width, view.height, i % 2 === 1);
   }
   ctx.restore();
   drawDrift(ctx, time, mode, view, lava);
@@ -92,6 +94,12 @@ function drawBackground(ctx, image, time, mode, view, lava) {
 }
 
 function drawMenuBackground(ctx, image, time, view) {
+  if (view.portrait) {
+    drawPortraitBackground(ctx, image, time, view, false, 1);
+    drawMenuSparkles(ctx, time, view);
+    drawMenuGradient(ctx, view);
+    return;
+  }
   const scale = 1.08;
   const width = view.width * scale;
   const height = view.height * scale;
@@ -99,12 +107,35 @@ function drawMenuBackground(ctx, image, time, view) {
   const y = (view.height - height) / 2 + Math.cos(time * 0.12) * view.height * 0.018;
   drawCoverTile(ctx, image, x, y, width, height, false);
   drawMenuSparkles(ctx, time, view);
+  drawMenuGradient(ctx, view);
+}
+
+function drawMenuGradient(ctx, view) {
   const gradient = ctx.createLinearGradient(0, 0, 0, view.height);
   gradient.addColorStop(0, "rgba(4, 18, 46, 0.14)");
   gradient.addColorStop(0.55, "rgba(3, 18, 38, 0.06)");
   gradient.addColorStop(1, "rgba(2, 14, 30, 0.32)");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, view.width, view.height);
+}
+
+function drawPortraitBackground(ctx, image, time, view, lava, alpha) {
+  if (!image) return;
+  const scale = view.height / image.height;
+  const sw = Math.min(image.width, view.width / scale);
+  const maxSx = Math.max(0, image.width - sw);
+  const baseAnchor = lava ? 0.52 : 0.16;
+  const sway = Math.sin(time * 0.045) * (lava ? 0.055 : 0.065);
+  const anchor = Math.max(0, Math.min(1, baseAnchor + sway));
+  const sx = maxSx * anchor;
+  ctx.save();
+  ctx.globalAlpha *= alpha;
+  ctx.drawImage(image, sx, 0, sw, image.height, 0, 0, view.width, view.height);
+  ctx.globalAlpha *= lava ? 0.34 : 0.42;
+  const sideAnchor = lava ? 0.82 : 0.9;
+  const sideSx = maxSx * sideAnchor;
+  ctx.drawImage(image, sideSx, 0, sw, image.height, view.width * 0.08, 0, view.width, view.height);
+  ctx.restore();
 }
 
 function drawMenuSparkles(ctx, time, view) {

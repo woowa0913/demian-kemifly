@@ -1,5 +1,6 @@
 import { createAudio } from "./audio.js";
 import { loadAssets } from "./assets.js";
+import { SUPPORT_URL } from "./config.js";
 import { createGameState, drainAudioEvents, flap, showHall, startRun, submitRecord, togglePause, updateState } from "./game-state.js";
 import { applyCanvasLayout, getView } from "./layout.js";
 import { render } from "./renderer.js";
@@ -44,6 +45,7 @@ function bindInput() {
   window.addEventListener("resize", handleResize);
   window.addEventListener("orientationchange", handleResize);
   nameInput.addEventListener("keydown", handleNameKey);
+  nameInput.addEventListener("change", handleNameCommit);
   nameInput.addEventListener("input", () => {
     nameInput.value = nameInput.value.replace(/[^\w가-힣ㄱ-ㅎㅏ-ㅣ -]/g, "").slice(0, 8);
   });
@@ -72,9 +74,16 @@ function handleKeyDown(event) {
 }
 
 function handleNameKey(event) {
-  if (event.code !== "Enter") return;
+  if (event.key !== "Enter" && event.code !== "Enter") return;
   event.preventDefault();
   event.stopPropagation();
+  handleRecordSubmit();
+  syncNameInput();
+}
+
+function handleNameCommit(event) {
+  if (state.mode !== "gameover" || !state.isRecord || state.saved) return;
+  event.preventDefault();
   handleRecordSubmit();
   syncNameInput();
 }
@@ -104,9 +113,15 @@ function performAction(action) {
   else if (action === "hall") showHall(state);
   else if (action === "back") state.mode = "menu";
   else if (action === "save") handleRecordSubmit();
+  else if (action === "support") openSupportPage();
   else if (action === "sound") state.soundMuted = audio.toggleMute();
   if (action !== "sound") audio.play("button");
   syncNameInput();
+}
+
+function openSupportPage() {
+  const opened = window.open(SUPPORT_URL, "_blank", "noopener,noreferrer");
+  if (opened) opened.opener = null;
 }
 
 function handleRecordSubmit() {
@@ -135,8 +150,11 @@ function syncNameInput() {
   nameInput.style.display = visible ? "block" : "none";
   if (!visible) return;
   const rect = canvas.getBoundingClientRect();
+  const view = getView(state);
+  const inputCanvasY = view.portrait ? 534 : view.height * 0.61;
   nameInput.style.left = `${rect.left + rect.width / 2}px`;
-  nameInput.style.top = `${rect.top + rect.height * 0.61}px`;
+  nameInput.style.top = `${rect.top + (inputCanvasY / view.height) * rect.height}px`;
+  nameInput.style.width = view.portrait ? `${Math.min(300, rect.width * 0.76)}px` : "";
   if (document.activeElement !== nameInput) nameInput.focus({ preventScroll: true });
 }
 

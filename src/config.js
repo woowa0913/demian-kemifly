@@ -109,6 +109,8 @@ export const MEDIA_PATHS = Object.freeze({
   }),
 });
 
+export const SUPPORT_URL = "https://safe.menlosecurity.com/mpa/1/https://demian2.ai-playground.ktcloud.com/#apply";
+
 export const TITLES = Object.freeze([
   { score: 20000, label: "케미 마스터" },
   { score: 10000, label: "하늘섬의 영웅" },

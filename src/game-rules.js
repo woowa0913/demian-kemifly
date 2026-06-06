@@ -97,21 +97,58 @@ function getPairedY(first, pair, view, top) {
 }
 
 export function spawnItem(state) {
-  const base = shouldSpawnLavaPortal(state) ? ITEMS.find((item) => item.kind === "lavaPortal") : securePick(ITEMS.filter((item) => item.kind !== "lavaPortal"));
+  const base = pickItem(state);
   const view = getView(state);
   const top = view.portrait ? 214 : 132;
-  state.items.push({
-    ...base,
-    x: view.width + secureRange(80, 220),
-    y: secureRange(top, view.height - 88),
-    wobble: secureRange(0, Math.PI * 2),
-    collected: false,
-  });
+  const x = view.width + secureRange(80, 220);
+  const y = chooseItemY(state, view, top);
+  const trail = shouldSpawnItemTrail(state, base);
+  const count = trail ? 3 : 1;
+  for (let i = 0; i < count; i += 1) {
+    const arc = trail ? Math.sin((i / 2) * Math.PI) * -34 : 0;
+    state.items.push({
+      ...base,
+      x: x + i * 56,
+      y: clampValue(y + arc + secureRange(-8, 8), top, view.height - 88),
+      wobble: secureRange(0, Math.PI * 2),
+      collected: false,
+      trail,
+    });
+  }
+}
+
+function pickItem(state) {
+  if (shouldSpawnRecovery(state)) return securePick(ITEMS.filter((item) => ["heart", "smileCloud", "shield"].includes(item.kind)));
+  if (shouldSpawnLavaPortal(state)) return ITEMS.find((item) => item.kind === "lavaPortal");
+  return securePick(ITEMS.filter((item) => item.kind !== "lavaPortal"));
+}
+
+function shouldSpawnRecovery(state) {
+  if (state.map === "lava" || state.energy > GAME.lowEnergyThreshold) return false;
+  return !state.items.some((item) => ["heart", "smileCloud", "shield"].includes(item.kind) && !item.collected);
+}
+
+function chooseItemY(state, view, top) {
+  if (state.energy <= GAME.lowEnergyThreshold && state.player) {
+    return clampValue(state.player.y + secureRange(-62, 62), top + 14, view.height - 106);
+  }
+  return secureRange(top, view.height - 88);
+}
+
+function shouldSpawnItemTrail(state, base) {
+  if (base.lavaTrap || state.energy <= GAME.lowEnergyThreshold) return false;
+  if (!["crystal", "goldCrystal", "star", "feather"].includes(base.kind)) return false;
+  const chance = state.time < 18 ? 0.32 : 0.22;
+  return secureRange(0, 1) < chance;
 }
 
 function shouldSpawnLavaPortal(state) {
   if (state.map === "lava" || state.lavaTimer > 0 || state.time < 8) return false;
   return secureRange(0, 1) > 0.78;
+}
+
+function clampValue(value, min, max) {
+  return Math.max(min, Math.min(max, value));
 }
 
 export function intersects(a, b) {

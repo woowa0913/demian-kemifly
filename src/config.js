@@ -20,6 +20,15 @@ export const GAME = Object.freeze({
   glideDuration: 4.2,
   boostDuration: 3.6,
   levelThresholds: [0, 3, 7, 12, 18, 25],
+  comboMilestone: 5,
+  lowEnergyThreshold: 38,
+  routePhases: [
+    { distance: 0, label: "새싹 하늘", detail: "수정 트레일로 리듬 익히기" },
+    { distance: 160, label: "구름 협곡", detail: "장애물 예고를 보고 길 선택" },
+    { distance: 430, label: "수정 항로", detail: "콤보 보상으로 고득점 노리기" },
+    { distance: 820, label: "폭풍 가장자리", detail: "회복 아이템과 실드 관리" },
+    { distance: 1350, label: "마스터 항로", detail: "용암 포탈은 선택형 고난도 도전" },
+  ],
 });
 
 export const ASSET_PATHS = Object.freeze({

@@ -7,6 +7,7 @@ export function render(ctx, state, assets) {
   state.buttons = [];
   drawWorld(ctx, state, assets);
   drawHud(ctx, state);
+  if (state.mode === "playing" || state.mode === "paused") drawDangerTelegraphs(ctx, state);
   if (state.mode === "playing") drawRunMoments(ctx, state);
   if (state.mode === "menu") drawMenu(ctx, state, assets);
   if (state.mode === "paused") drawPause(ctx, state);
@@ -51,6 +52,7 @@ function drawProgressHud(ctx, state, view) {
   label(ctx, text, x + 18, y + 63, 13, mission.done ? "#78ffca" : "#d9fbff", "800");
   if (state.map === "lava") label(ctx, `LAVA ${Math.ceil(state.lavaTimer)}s x${GAME.lavaScoreMultiplier}`, x + w - 18, y + 24, 13, "#ffb357", "900", "right");
   else if (state.boostTime > 0) label(ctx, `BOOST ${Math.ceil(state.boostTime)}s`, x + w - 18, y + 24, 13, "#ffd76b", "900", "right");
+  else label(ctx, getRoutePhase(state).label, x + w - 18, y + 24, 13, "#9af7ff", "900", "right");
 }
 
 function getLevelProgressText(state) {
@@ -83,6 +85,11 @@ function getActiveChips(state) {
 
 function drawRunMoments(ctx, state) {
   const view = getView(state);
+  if (state.routeReveal > 0) {
+    const phase = getRoutePhase(state);
+    const y = view.portrait ? 264 : 132;
+    drawMomentBanner(ctx, view.width / 2, y, phase.label, phase.detail, "#9af7ff", Math.min(0.86, state.routeReveal / 0.8));
+  }
   if (state.levelReveal > 0) {
     const alpha = Math.min(1, state.levelReveal / 0.8);
     drawMomentBanner(ctx, view.width / 2, view.height * 0.34, `LV ${state.level}`, getLevelPerkText(state.level), "#ffd76b", alpha);
@@ -92,6 +99,39 @@ function drawRunMoments(ctx, state) {
     const text = `용암 챌린지 ${Math.ceil(state.lavaTimer)}초`;
     drawMomentBanner(ctx, view.width / 2, y, text, `생존하면 +450 · 점수 x${GAME.lavaScoreMultiplier}`, "#ff9a44", 0.82);
   }
+}
+
+function drawDangerTelegraphs(ctx, state) {
+  const view = getView(state);
+  const incoming = state.obstacles
+    .filter((obstacle) => obstacle.x > view.width - 24 && obstacle.x < view.width + 230)
+    .sort((a, b) => a.x - b.x)
+    .slice(0, 3);
+  if (!incoming.length) return;
+  ctx.save();
+  incoming.forEach((obstacle, index) => {
+    const y = Math.max(view.portrait ? 226 : 124, Math.min(view.height - 92, obstacle.y));
+    const x = view.width - 22 - index * 18;
+    const pulse = 0.55 + Math.sin((state.clock || 0) * 8 + index) * 0.18;
+    ctx.globalAlpha = 0.78;
+    ctx.fillStyle = obstacle.ground ? "rgba(255, 186, 76, 0.78)" : "rgba(255, 92, 92, 0.84)";
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + 13, y - 18);
+    ctx.lineTo(x + 13, y + 18);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255, 255, 255, ${pulse})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    label(ctx, "!", x + 19, y, 16, "#fff4b8", "900", "center");
+  });
+  ctx.restore();
+}
+
+function getRoutePhase(state) {
+  const phases = GAME.routePhases || [{ label: "비행", detail: "하늘섬 항로" }];
+  return phases[Math.max(0, Math.min(phases.length - 1, state.routePhase || 0))];
 }
 
 function getLevelPerkText(level) {
@@ -235,6 +275,7 @@ function drawRunSummary(ctx, state, cx, y) {
     label(ctx, rows[i][0], cx - 104, rowY, 13, i === 2 ? "#ffd76b" : "#d9fbff", "900", "center");
     label(ctx, rows[i][1], cx + 104, rowY, 13, i === 2 ? "#ffd76b" : "#d9fbff", "900", "center");
   }
+  if (summary.coachTip) label(ctx, summary.coachTip, cx, y + 68, 12, "#a4ffcb", "800", "center");
 }
 
 function drawHall(ctx, state, assets) {

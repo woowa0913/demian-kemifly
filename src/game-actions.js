@@ -20,6 +20,7 @@ export function collect(state, item) {
     return;
   }
   state.combo += 1;
+  rewardComboMilestone(state);
   state.itemsCollected += 1;
   updateLevel(state, item);
   addFever(state, item.fever || (item.kind === "goldCrystal" || item.kind === "star" ? 18 : 12), emit);
@@ -94,6 +95,24 @@ export function damage(state, amount, label) {
     emit(state, "damage");
   }
   state.damageTimer = GAME.damageCooldown;
+  state.lastComboReward = 0;
+}
+
+export function rewardComboMilestone(state) {
+  const milestone = Math.floor((state.combo || 0) / GAME.comboMilestone) * GAME.comboMilestone;
+  if (milestone <= 0 || milestone <= (state.lastComboReward || 0)) return;
+  state.lastComboReward = milestone;
+  const energyGain = Math.min(18, 6 + Math.floor(milestone / GAME.comboMilestone) * 2);
+  const feverGain = Math.min(18, 8 + Math.floor(milestone / 10) * 3);
+  state.energy = Math.min(GAME.maxEnergy, state.energy + energyGain);
+  state.score += milestone * 18 * scoreMultiplier(state);
+  if (milestone % 10 === 0) {
+    state.shield = Math.min(maxShieldForLevel(state), state.shield + 1);
+    state.shieldFlash = 2.2;
+  }
+  addFever(state, feverGain, emit);
+  state.effects.push({ x: state.player.x + 78, y: state.player.y - 72, text: `COMBO ${milestone}!`, life: 1, good: true });
+  emit(state, milestone % 10 === 0 ? "shield" : "gold");
 }
 
 export function finishRun(state, reason) {
@@ -136,5 +155,14 @@ function buildRunSummary(state) {
     lavaSurvival: Math.floor(state.lastLavaSurvival || 0),
     missionsCompleted: state.missionsCompleted || 0,
     title: getTitle(state.score),
+    coachTip: getCoachTip(state),
   };
+}
+
+function getCoachTip(state) {
+  if ((state.bestCombo || 0) < 3) return "팁: 장애물 가장자리를 스치듯 피하면 콤보와 피버가 빨라져요";
+  if ((state.maxLevel || 1) < 3) return "팁: 초록/금색 링 아이템을 이어 먹으면 케미가 빠르게 성장해요";
+  if ((state.lavaRuns || 0) === 0 && state.distance >= 500) return "팁: 포탈은 위험하지만 짧은 고득점 찬스예요";
+  if (state.energy < 25) return "팁: 에너지가 낮을 땐 하트와 구름을 우선 노려요";
+  return "좋아요: 다음 판은 콤보 10 이상으로 실드 보상을 노려봐요";
 }

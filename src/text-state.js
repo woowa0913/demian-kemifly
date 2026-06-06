@@ -1,3 +1,5 @@
+import { GAME } from "./config.js";
+
 export function renderGameToText(state) {
   const payload = {
     note: "Canvas coordinates: origin top-left, x right, y down.",
@@ -16,7 +18,10 @@ export function renderGameToText(state) {
     saved: state.saved,
     level: state.level,
     maxLevel: state.maxLevel || state.level,
+    routePhase: state.routePhase || 0,
+    routeLabel: getRouteLabel(state),
     levelReveal: Number((state.levelReveal || 0).toFixed(1)),
+    routeReveal: Number((state.routeReveal || 0).toFixed(1)),
     itemsCollected: state.itemsCollected,
     energy: Math.floor(state.energy),
     shield: state.shield,
@@ -54,6 +59,12 @@ export function renderGameToText(state) {
     })),
   };
   return JSON.stringify(payload);
+}
+
+function getRouteLabel(state) {
+  const phases = GAME.routePhases || [];
+  const phase = phases[Math.max(0, Math.min(phases.length - 1, state.routePhase || 0))];
+  return phase ? phase.label : "";
 }
 
 function roundEntity(entity) {

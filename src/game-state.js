@@ -1,5 +1,5 @@
 import { GAME } from "./config.js";
-import { collect, damage, emit, finishRun } from "./game-actions.js";
+import { collect, damage, emit, finishRun, rewardComboMilestone } from "./game-actions.js";
 import { createPlayer, intersects, spawnItem, spawnObstacle } from "./game-rules.js";
 import { createView, getView } from "./layout.js";
 import { addFever, createMissions, scoreMultiplier, updateMissions } from "./progression.js";
@@ -36,8 +36,11 @@ export function createGameState() {
     boostTime: 0,
     combo: 0,
     bestCombo: 0,
+    lastComboReward: 0,
     fever: 0,
     feverTime: 0,
+    routePhase: 0,
+    routeReveal: 0,
     nearMisses: 0,
     missionTier: 0,
     missionsCompleted: 0,
@@ -87,8 +90,11 @@ export function startRun(state) {
     boostTime: 0,
     combo: 0,
     bestCombo: 0,
+    lastComboReward: 0,
     fever: 0,
     feverTime: 0,
+    routePhase: 0,
+    routeReveal: 0,
     nearMisses: 0,
     missionTier: 0,
     missionsCompleted: 0,
@@ -148,11 +154,13 @@ export function updateState(state, dt) {
   state.map = state.lavaTimer > 0 ? "lava" : "sky";
   state.levelFlash = Math.max(0, state.levelFlash - step);
   state.levelReveal = Math.max(0, state.levelReveal - step);
+  state.routeReveal = Math.max(0, state.routeReveal - step);
   updatePlayer(state, step);
   updateSpawns(state, step);
   updateEntities(state, step);
   updateCollisions(state);
   updateScore(state, step);
+  updateRoutePhase(state);
   state.shake = Math.max(0, state.shake - step * 12);
   if (state.energy <= 0) finishRun(state, "에너지가 모두 소진됐어요");
 }
@@ -225,12 +233,14 @@ function updateCollisions(state) {
     obstacle.hit = true;
     damage(state, obstacle.damage, obstacle.kind);
     state.combo = 0;
+    state.lastComboReward = 0;
   }
   for (const obstacle of state.obstacles) {
     if (obstacle.hit || obstacle.passed || obstacle.x + obstacle.r > state.player.x - state.player.r) continue;
     obstacle.passed = true;
     if (Math.abs(obstacle.y - state.player.y) < 96) {
       state.combo += 1;
+      rewardComboMilestone(state);
       state.nearMisses += 1;
       state.bestCombo = Math.max(state.bestCombo || 0, state.combo);
       addFever(state, 10, emit);
@@ -258,6 +268,21 @@ function updateScore(state, dt) {
   state.distance += dt * 18;
   updateMissions(state, emit);
   state.score += (dt * 10 + state.combo * dt * 1.5) * scoreMultiplier(state);
+}
+
+function updateRoutePhase(state) {
+  const phases = GAME.routePhases || [];
+  let next = 0;
+  for (let i = 0; i < phases.length; i += 1) {
+    if (state.distance >= phases[i].distance) next = i;
+  }
+  if (next <= (state.routePhase || 0)) return;
+  state.routePhase = next;
+  state.routeReveal = 1.6;
+  state.message = phases[next].label;
+  state.score += 140 + next * 60;
+  state.effects.push({ x: state.player.x + 92, y: state.player.y - 92, text: phases[next].label, life: 1.2, good: true });
+  emit(state, "gold");
 }
 
 function applyMagnet(state, dt) {

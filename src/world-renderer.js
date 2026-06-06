@@ -52,20 +52,12 @@ export function drawImageCentered(ctx, image, x, y, w, h) {
   ctx.drawImage(image, x - w / 2, y - h / 2, w, h);
 }
 
-function drawImageFitCentered(ctx, image, x, y, maxW, maxH) {
+export function drawImageFitCentered(ctx, image, x, y, maxW, maxH) {
   if (!image) return;
   const scale = Math.min(maxW / image.width, maxH / image.height);
   const w = image.width * scale;
   const h = image.height * scale;
   ctx.drawImage(image, x - w / 2, y - h / 2, w, h);
-}
-
-function drawImageHeightCentered(ctx, image, x, y, h, maxW) {
-  if (!image) return;
-  const ratio = image.width / image.height;
-  const w = Math.min(maxW, h * ratio);
-  const drawH = w === maxW ? maxW / ratio : h;
-  ctx.drawImage(image, x - w / 2, y - drawH / 2, w, drawH);
 }
 
 function drawBackground(ctx, image, time, mode, view, lava) {
@@ -184,11 +176,11 @@ function drawDrift(ctx, time, mode, view, lava) {
 function drawKemi(ctx, state, assets) {
   const player = state.player;
   const level = Math.max(1, Math.min(6, state.level || 1));
-  const frame = (Math.floor(state.time * 10) % 3) + 1;
+  const frame = getKemiFlightFrame(state);
   const key = `kemiLv${level}Frame${frame}`;
   const image = assets[key] || assets.kemi2;
-  const height = player.frameKick > 0 ? 72 : 66;
-  const maxWidth = player.frameKick > 0 ? 126 : 116;
+  const maxHeight = player.frameKick > 0 ? 74 : 68;
+  const maxWidth = player.frameKick > 0 ? 116 : 108;
   ctx.save();
   ctx.translate(player.x, player.y);
   ctx.rotate(Math.max(-0.32, Math.min(0.32, player.vy / 900)));
@@ -198,8 +190,13 @@ function drawKemi(ctx, state, assets) {
     ctx.shadowBlur = 18;
   }
   if (state.shield > 0 || state.shieldFlash > 0) drawShieldAura(ctx, state);
-  drawImageHeightCentered(ctx, image, 0, 4, height, maxWidth);
+  drawImageFitCentered(ctx, image, 0, 4, maxWidth, maxHeight);
   ctx.restore();
+}
+
+function getKemiFlightFrame(state) {
+  if (state.player.frameKick > 0) return 2;
+  return Math.floor(state.time * 8) % 2 === 0 ? 1 : 2;
 }
 
 function drawShieldAura(ctx, state) {

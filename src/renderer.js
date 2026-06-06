@@ -1,7 +1,7 @@
 import { GAME } from "./config.js";
 import { getView } from "./layout.js";
 import { getTitle } from "./storage.js";
-import { drawImageCentered, drawWorld } from "./world-renderer.js";
+import { drawImageCentered, drawImageFitCentered, drawWorld } from "./world-renderer.js";
 
 export function render(ctx, state, assets) {
   state.buttons = [];
@@ -195,23 +195,23 @@ function getMenuLine(state) {
 
 function drawMenuKemi(ctx, state, assets, x, y, view) {
   const time = state.clock || 0;
-  const frame = (Math.floor(time * 5.5) % 3) + 1;
+  const frame = Math.floor(time * 5.5) % 2 === 0 ? 1 : 2;
   const image = assets[`kemiLv3Frame${frame}`] || assets.kemi2 || assets.happy;
   const floatY = Math.sin(time * 2.2) * 8;
   const driftX = Math.cos(time * 1.4) * 4;
   const scalePulse = 1 + Math.sin(time * 4.4) * 0.025;
-  const w = (view.portrait ? 148 : 118) * scalePulse;
-  const h = (view.portrait ? 118 : 94) * scalePulse;
+  const maxW = (view.portrait ? 142 : 116) * scalePulse;
+  const maxH = (view.portrait ? 120 : 98) * scalePulse;
 
   ctx.save();
   ctx.translate(x + driftX, y + floatY);
   ctx.rotate(Math.sin(time * 1.8) * 0.045);
   ctx.shadowColor = "rgba(56, 232, 255, 0.42)";
   ctx.shadowBlur = 18;
-  drawImageCentered(ctx, image, 0, 0, w, h);
+  drawImageFitCentered(ctx, image, 0, 0, maxW, maxH);
   ctx.shadowBlur = 0;
-  drawWingSpark(ctx, time, -w * 0.42, -h * 0.08);
-  drawWingSpark(ctx, time + 1.2, w * 0.4, -h * 0.12);
+  drawWingSpark(ctx, time, -maxW * 0.42, -maxH * 0.08);
+  drawWingSpark(ctx, time + 1.2, maxW * 0.4, -maxH * 0.12);
   ctx.restore();
 }
 

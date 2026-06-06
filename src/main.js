@@ -3,7 +3,7 @@ import { loadAssets } from "./assets.js";
 import { createGameState, drainAudioEvents, flap, showHall, startRun, submitRecord, togglePause, updateState } from "./game-state.js";
 import { applyCanvasLayout, getView } from "./layout.js";
 import { render } from "./renderer.js";
-import { saveScoreRemote, syncLeaderboardFromServer } from "./storage.js";
+import { hasValidName, saveScoreRemote, syncLeaderboardFromServer } from "./storage.js";
 import { renderGameToText } from "./text-state.js";
 
 const canvas = document.querySelector("#game");
@@ -107,6 +107,12 @@ function performAction(action) {
 
 function handleRecordSubmit() {
   const name = nameInput.value;
+  if (!hasValidName(name)) {
+    state.message = "이름을 입력해주세요";
+    render(ctx, state, assets);
+    nameInput.focus({ preventScroll: true });
+    return;
+  }
   const stats = {
     score: state.score,
     distance: state.distance,
@@ -124,7 +130,6 @@ function syncNameInput() {
   const visible = state.mode === "gameover" && state.isRecord && !state.saved;
   nameInput.style.display = visible ? "block" : "none";
   if (!visible) return;
-  if (!nameInput.value) nameInput.value = "KEMI";
   const rect = canvas.getBoundingClientRect();
   nameInput.style.left = `${rect.left + rect.width / 2}px`;
   nameInput.style.top = `${rect.top + rect.height * 0.61}px`;

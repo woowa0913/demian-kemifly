@@ -10,7 +10,7 @@ export function render(ctx, state, assets) {
   if (state.mode === "menu") drawMenu(ctx, state, assets);
   if (state.mode === "paused") drawPause(ctx, state);
   if (state.mode === "gameover") drawGameOver(ctx, state, assets);
-  if (state.mode === "hall") drawHall(ctx, state);
+  if (state.mode === "hall") drawHall(ctx, state, assets);
 }
 
 function drawHud(ctx, state) {
@@ -93,27 +93,60 @@ function drawGameOver(ctx, state, assets) {
   label(ctx, `점수 ${Math.floor(state.score)}`, cx, panelY + 42, 34, "#ffffff", "900", "center");
   label(ctx, `${getTitle(state.score)} · 거리 ${state.distance} · 수정 ${state.crystals}`, cx, panelY + 84, 18, "#9af7ff", "800", "center");
   const prompt = state.saved ? "기록 완료! 명예의 전당에서 확인하세요" : "명예의 전당에 기록할 이름을 입력하세요";
-  label(ctx, state.isRecord ? prompt : state.message, cx, panelY + 126, 17, "#ffd76b", "800", "center");
+  label(ctx, state.isRecord ? state.message || prompt : state.message, cx, panelY + 126, 17, "#ffd76b", "800", "center");
   button(ctx, state, state.isRecord && !state.saved ? "save" : "restart", state.isRecord && !state.saved ? "기록 저장" : "RETRY", cx - 136, buttonY, 272, 62);
   button(ctx, state, "hall", "명예의 전당", cx - 136, buttonY + 76, 272, 58);
 }
 
-function drawHall(ctx, state) {
+function drawHall(ctx, state, assets) {
   const view = getView(state);
   const cx = view.width / 2;
-  const panel = view.portrait ? { x: 34, y: 154, w: view.width - 68, h: 604, row: 48 } : { x: 210, y: 116, w: 540, h: 318, row: 27 };
+  const panel = view.portrait
+    ? { x: 34, y: 144, w: view.width - 68, h: 620, row: 54, avatar: 42, compact: false }
+    : { x: 180, y: 104, w: 600, h: 344, row: 30, avatar: 32, compact: true };
   drawScrim(ctx, 0.42);
   title(ctx, "명예의 전당", cx, view.portrait ? 94 : 80, view.portrait ? 40 : 44);
   drawPanel(ctx, panel.x, panel.y, panel.w, panel.h, 0.74);
   const rows = state.leaderboard.length ? state.leaderboard : [{ name: "첫 기록을 기다려요", score: 0, title: "새싹 비행가" }];
   rows.slice(0, 10).forEach((entry, index) => {
     const y = panel.y + 48 + index * panel.row;
-    label(ctx, `${index + 1}`, panel.x + 40, y, 17, "#ffd76b", "900", "center");
-    label(ctx, entry.name, panel.x + 84, y, 17, "#ffffff", "800");
-    label(ctx, String(entry.score), panel.x + panel.w - 156, y, 17, "#ffffff", "900", "right");
-    label(ctx, entry.title, panel.x + panel.w - 126, y, 15, "#8cf6ff", "700");
+    const tier = getHallTier(entry.score);
+    drawHallRow(ctx, panel, y, tier);
+    label(ctx, `${index + 1}`, panel.x + 34, y, 16, "#ffd76b", "900", "center");
+    drawImageFit(ctx, assets[getHallAvatarKey(tier.level)] || assets.happy, panel.x + 72, y, panel.avatar, panel.avatar);
+    if (panel.compact) {
+      label(ctx, entry.name, panel.x + 104, y, 16, "#ffffff", "900");
+      label(ctx, `LV ${tier.level} · ${entry.title}`, panel.x + 190, y, 13, tier.color, "800");
+    } else {
+      label(ctx, entry.name, panel.x + 104, y - 7, 16, "#ffffff", "900");
+      label(ctx, `LV ${tier.level} · ${entry.title}`, panel.x + 104, y + 11, 12, tier.color, "800");
+    }
+    label(ctx, String(entry.score), panel.x + panel.w - 24, y, 17, "#ffffff", "900", "right");
   });
   button(ctx, state, "back", "BACK", cx - 120, view.portrait ? 800 : 462, 240, 58);
+}
+
+function drawHallRow(ctx, panel, y, tier) {
+  const x = panel.x + 18;
+  const w = panel.w - 36;
+  const h = Math.max(26, panel.row - 8);
+  ctx.save();
+  ctx.globalAlpha = 0.34;
+  roundRect(ctx, x, y - h / 2, w, h, 8, tier.fill, tier.stroke);
+  ctx.restore();
+}
+
+function getHallTier(score) {
+  if (score >= 20000) return { level: 6, color: "#ffd76b", fill: "rgba(255, 215, 107, 0.22)", stroke: "rgba(255, 215, 107, 0.55)" };
+  if (score >= 10000) return { level: 5, color: "#9af7ff", fill: "rgba(56, 232, 255, 0.18)", stroke: "rgba(56, 232, 255, 0.48)" };
+  if (score >= 5000) return { level: 4, color: "#a4ffcb", fill: "rgba(120, 255, 202, 0.16)", stroke: "rgba(120, 255, 202, 0.42)" };
+  if (score >= 3000) return { level: 3, color: "#c7d8ff", fill: "rgba(153, 185, 255, 0.15)", stroke: "rgba(153, 185, 255, 0.38)" };
+  if (score >= 1000) return { level: 2, color: "#d9fbff", fill: "rgba(217, 251, 255, 0.13)", stroke: "rgba(217, 251, 255, 0.32)" };
+  return { level: 1, color: "#d9fbff", fill: "rgba(255, 255, 255, 0.1)", stroke: "rgba(255, 255, 255, 0.24)" };
+}
+
+function getHallAvatarKey(level) {
+  return `kemiLv${Math.max(1, Math.min(6, level))}Frame1`;
 }
 
 function button(ctx, state, action, text, x, y, w, h) {
@@ -129,6 +162,14 @@ function smallButton(ctx, state, action, text, x, y, w, h) {
   state.buttons.push({ action, x, y, w, h });
   roundRect(ctx, x, y, w, h, 8, "rgba(4, 24, 58, 0.58)", "rgba(56, 232, 255, 0.65)");
   label(ctx, text, x + w / 2, y + h / 2 + 1, 13, "#d9fbff", "900", "center");
+}
+
+function drawImageFit(ctx, image, x, y, maxW, maxH) {
+  if (!image) return;
+  const scale = Math.min(maxW / image.width, maxH / image.height);
+  const w = image.width * scale;
+  const h = image.height * scale;
+  ctx.drawImage(image, x - w / 2, y - h / 2, w, h);
 }
 
 function drawPanel(ctx, x, y, w, h, alpha) {

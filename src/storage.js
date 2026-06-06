@@ -11,6 +11,13 @@ export function sanitizeName(value) {
   return text || "KEMI";
 }
 
+export function hasValidName(value) {
+  return String(value ?? "")
+    .replace(NAME_PATTERN, "")
+    .replace(/\s+/g, " ")
+    .trim().length > 0;
+}
+
 export function getTitle(score) {
   const found = TITLES.find((entry) => score >= entry.score);
   return found ? found.label : "새싹 비행가";

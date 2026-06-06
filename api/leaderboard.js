@@ -102,9 +102,11 @@ function normalizeRecord(record) {
   const score = toScore(record.score, 999999999);
   const distance = toScore(record.distance, 999999);
   const crystals = toScore(record.crystals, 99999);
+  const name = sanitizeName(record.name, false);
   if (score <= 0) return null;
+  if (!name) return null;
   return {
-    name: sanitizeName(record.name),
+    name,
     score,
     distance,
     crystals,
@@ -113,13 +115,13 @@ function normalizeRecord(record) {
   };
 }
 
-function sanitizeName(value) {
+function sanitizeName(value, fallback = true) {
   const text = String(value ?? "")
     .replace(NAME_PATTERN, "")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 8);
-  return text || "KEMI";
+  return text || (fallback ? "KEMI" : "");
 }
 
 function toScore(value, max) {

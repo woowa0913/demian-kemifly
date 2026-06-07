@@ -338,8 +338,8 @@ function drawHall(ctx, state, assets) {
     label(ctx, `${index + 1}`, panel.x + 34, y, 16, "#ffd76b", "900", "center");
     drawImageFit(ctx, assets[getHallAvatarKey(tier.level)] || assets.happy, panel.x + 72, y, panel.avatar, panel.avatar);
     if (panel.compact) {
-      label(ctx, entry.name, panel.x + 104, y, 16, "#ffffff", "900");
-      label(ctx, `LV ${tier.level} · ${entry.title}`, panel.x + 190, y, 13, tier.color, "800");
+      label(ctx, trimText(ctx, entry.name, 170, "900", 15), panel.x + 104, y - 7, 15, "#ffffff", "900");
+      label(ctx, trimText(ctx, `LV ${tier.level} · ${entry.title}`, 250, "800", 11), panel.x + 104, y + 10, 11, tier.color, "800");
     } else {
       label(ctx, entry.name, panel.x + 104, y - 7, 16, "#ffffff", "900");
       label(ctx, `LV ${tier.level} · ${entry.title}`, panel.x + 104, y + 11, 12, tier.color, "800");
@@ -527,6 +527,15 @@ function label(ctx, text, x, y, size, color, weight = "700", align = "left") {
   ctx.textAlign = align;
   ctx.textBaseline = "middle";
   ctx.fillText(text, x, y);
+}
+
+function trimText(ctx, text, maxWidth, weight, size) {
+  const value = String(text ?? "");
+  ctx.font = `${weight} ${size}px Arial, Apple SD Gothic Neo, sans-serif`;
+  if (ctx.measureText(value).width <= maxWidth) return value;
+  let next = value;
+  while (next.length > 1 && ctx.measureText(`${next}…`).width > maxWidth) next = next.slice(0, -1);
+  return `${next}…`;
 }
 
 function roundRect(ctx, x, y, w, h, radius, fill, stroke) {

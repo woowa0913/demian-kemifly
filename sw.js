@@ -1,4 +1,4 @@
-const CACHE_NAME = "kemi-fly-v21";
+const CACHE_NAME = "kemi-fly-v22";
 const CORE_ASSETS = [
   "./",
   "./index.html",

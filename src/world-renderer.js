@@ -232,11 +232,51 @@ function drawEntity(ctx, assets, entity, state) {
   const bob = entity.ground ? 0 : Math.sin(entity.wobble + state.clock * 4.2) * 5;
   const y = entity.y + bob;
   const item = ITEM_KINDS.has(entity.kind);
+  if (entity.motion === "diagonalDive") drawDiveTrail(ctx, entity, y, state.clock);
+  if (entity.motion === "vertical") drawMotionCue(ctx, entity, y, state.clock);
   if (TRAP_KINDS.has(entity.kind)) drawTrapAura(ctx, entity, y, state.clock);
   else if (item) drawCollectibleAura(ctx, entity, y, state.clock);
   else drawHazardSignal(ctx, entity, y, state.clock);
   const size = entity.r * (entity.ground ? 2.55 : 2.45);
   drawImageFitCentered(ctx, image, entity.x, y, size, size);
+}
+
+function drawDiveTrail(ctx, entity, y, time) {
+  ctx.save();
+  ctx.globalAlpha = 0.28;
+  const gradient = ctx.createLinearGradient(entity.x + 36, y - 36, entity.x - 22, y + 22);
+  gradient.addColorStop(0, "rgba(255, 235, 120, 0.75)");
+  gradient.addColorStop(0.45, "rgba(255, 100, 28, 0.42)");
+  gradient.addColorStop(1, "rgba(255, 46, 20, 0)");
+  ctx.strokeStyle = gradient;
+  ctx.lineWidth = 14;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(entity.x + 48, y - 44);
+  ctx.quadraticCurveTo(entity.x + 18, y - 16 + Math.sin(time * 7) * 4, entity.x - 14, y + 16);
+  ctx.stroke();
+  ctx.globalAlpha = 0.16;
+  ctx.strokeStyle = "rgba(255, 218, 92, 0.8)";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(entity.x + 52, y - 58);
+  ctx.lineTo(entity.x - 8, y + 4);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawMotionCue(ctx, entity, y, time) {
+  const pulse = 0.35 + Math.sin(time * 6) * 0.12;
+  ctx.save();
+  ctx.globalAlpha = pulse;
+  ctx.strokeStyle = "rgba(255, 115, 115, 0.8)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 8]);
+  ctx.beginPath();
+  ctx.moveTo(entity.x + entity.r + 16, y - (entity.amplitude || 34));
+  ctx.lineTo(entity.x + entity.r + 16, y + (entity.amplitude || 34));
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawCollectibleAura(ctx, entity, y, time) {

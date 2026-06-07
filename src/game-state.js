@@ -220,10 +220,15 @@ function updateSpawns(state, dt) {
 }
 
 function updateEntities(state, dt) {
+  const view = getView(state);
   const lavaBoost = state.map === "lava" ? GAME.lavaSpeedBonus : 0;
   const slowScale = state.slowTime > 0 ? 0.72 : 1;
   const speed = (GAME.scrollSpeed + lavaBoost + Math.min(GAME.scrollSpeedMaxBonus, state.time * 8.4 + state.distance * 0.09)) * slowScale;
-  for (const group of [state.obstacles, state.items, state.effects]) {
+  for (const obstacle of state.obstacles) {
+    obstacle.x -= speed * dt;
+    updateObstacleMotion(obstacle, state, view, dt);
+  }
+  for (const group of [state.items, state.effects]) {
     for (const entity of group) entity.x -= speed * dt;
   }
   applyMagnet(state, dt);
@@ -231,6 +236,19 @@ function updateEntities(state, dt) {
   state.items = state.items.filter((entity) => entity.x > -90 && !entity.collected);
   state.effects = state.effects.filter((entity) => entity.life > 0);
   for (const effect of state.effects) effect.life -= dt;
+}
+
+function updateObstacleMotion(obstacle, state, view, dt) {
+  if (obstacle.motion === "diagonalDive") {
+    obstacle.y = Math.min(view.height + obstacle.r, obstacle.y + (obstacle.vy || 56) * dt);
+    return;
+  }
+  if (obstacle.motion === "vertical") {
+    const top = view.portrait ? 208 : 132;
+    const bottom = view.height - 96;
+    const phase = (state.time || 0) * (obstacle.motionSpeed || 1.6) + (obstacle.motionPhase || 0);
+    obstacle.y = Math.max(top, Math.min(bottom, (obstacle.baseY || obstacle.y) + Math.sin(phase) * (obstacle.amplitude || 36)));
+  }
 }
 
 function updateCollisions(state) {

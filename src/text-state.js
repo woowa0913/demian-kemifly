@@ -82,5 +82,6 @@ function roundEntity(entity) {
     x: Math.round(entity.x),
     y: Math.round(entity.y),
     r: Math.round(entity.r),
+    motion: entity.motion || "",
   };
 }

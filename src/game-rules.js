@@ -17,6 +17,8 @@ const OBSTACLES = Object.freeze([
   { kind: "purplePlatform", r: 36, damage: 22, score: 82, ground: true },
 ]);
 
+const VERTICAL_MOVERS = new Set(["purpleCrystal", "iceSpike"]);
+
 const ITEMS = Object.freeze([
   { kind: "crystal", r: 20, score: 180 },
   { kind: "goldCrystal", r: 21, score: 320 },
@@ -39,12 +41,12 @@ export function spawnObstacle(state) {
   const view = getView(state);
   const top = view.portrait ? 208 : 132;
   const base = pickObstacle(state);
-  const first = buildObstacle(base, view.width + 80, getObstacleY(base, view, top));
+  const first = buildObstacle(base, view.width + 80, getObstacleY(base, view, top), state, view, top);
   state.obstacles.push(first);
   if (shouldSpawnPattern(state)) {
     const pair = pickPairedObstacle(state, base);
     const pairY = getPairedY(first, pair, view, top);
-    state.obstacles.push(buildObstacle(pair, view.width + secureRange(150, 230), pairY));
+    state.obstacles.push(buildObstacle(pair, view.width + secureRange(150, 230), pairY, state, view, top));
   }
 }
 
@@ -54,20 +56,51 @@ function getObstacleY(base, view, top) {
   return secureRange(floor - 18, floor + 6) - base.r * 0.18;
 }
 
-function buildObstacle(base, x, y) {
-  return {
+function buildObstacle(base, x, y, state, view, top) {
+  const obstacle = {
     ...base,
     x,
     y,
+    baseY: y,
     wobble: secureRange(0, Math.PI * 2),
     hit: false,
   };
+  return withLateMotion(obstacle, state, view, top);
 }
 
 function pickObstacle(state) {
   if (state.map === "lava") return securePick(OBSTACLES.filter((item) => item.kind.includes("lava") || !item.ground));
   if (state.time < 12) return securePick(OBSTACLES.filter((item) => !["lavaBall", "lavaComet", "thornRing"].includes(item.kind)));
   return securePick(OBSTACLES);
+}
+
+function withLateMotion(obstacle, state, view, top) {
+  if (!isLateFlight(state)) return obstacle;
+  if (obstacle.kind === "lavaComet") {
+    return {
+      ...obstacle,
+      motion: "diagonalDive",
+      vy: secureRange(44, state.map === "lava" ? 92 : 72),
+      trail: true,
+    };
+  }
+  if (VERTICAL_MOVERS.has(obstacle.kind)) {
+    const bottom = view.height - 108;
+    const room = Math.max(28, Math.min(obstacle.y - top, bottom - obstacle.y));
+    return {
+      ...obstacle,
+      motion: "vertical",
+      baseY: obstacle.y,
+      amplitude: Math.min(room, secureRange(30, 58)),
+      motionSpeed: secureRange(1.45, state.map === "lava" ? 2.25 : 1.9),
+      motionPhase: secureRange(0, Math.PI * 2),
+    };
+  }
+  return obstacle;
+}
+
+function isLateFlight(state) {
+  return state.distance >= 620 || state.time >= 34 || (state.stageIndex || 0) >= 2;
 }
 
 function pickPairedObstacle(state, base) {

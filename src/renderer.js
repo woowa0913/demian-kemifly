@@ -191,16 +191,27 @@ function drawMenu(ctx, state, assets) {
   const cx = view.width / 2;
   drawScrim(ctx, 0.32);
   const logoY = view.portrait ? 132 : 104;
-  const birdY = view.portrait ? 330 : 285;
-  const startY = view.portrait ? 540 : 318;
+  const birdY = view.portrait ? 318 : 276;
+  const startY = view.portrait ? 512 : 300;
   drawMenuKemi(ctx, state, assets, cx, birdY, view);
   drawImageCentered(ctx, assets.logo, cx, logoY, view.portrait ? 330 : 300, view.portrait ? 174 : 158);
   label(ctx, "케미의 첫 비행", cx, view.portrait ? 236 : 196, view.portrait ? 25 : 23, "#8cf6ff", "800", "center");
-  button(ctx, state, "start", "START", cx - 132, startY, 264, 68);
-  button(ctx, state, "hall", "명예의 전당", cx - 132, startY + 78, 264, 60);
-  if (view.portrait) smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", cx - 70, startY + 170, 140, 44);
+  drawMenuActions(ctx, state, cx, startY, view);
+  if (view.portrait) smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", cx - 70, startY + 206, 140, 44);
   else smallButton(ctx, state, "sound", state.soundMuted ? "SOUND OFF" : "SOUND ON", view.width - 172, 34, 134, 42);
-  drawMenuMotivation(ctx, state, cx, view.portrait ? startY + 228 : 470, view);
+  drawMenuMotivation(ctx, state, cx, view.portrait ? startY + 254 : 488, view);
+}
+
+function drawMenuActions(ctx, state, cx, y, view) {
+  const totalW = view.portrait ? Math.min(442, view.width - 48) : 382;
+  const gap = view.portrait ? 14 : 12;
+  const halfW = (totalW - gap) / 2;
+  const buttonH = view.portrait ? 60 : 58;
+  const fontSize = view.portrait ? 22 : 21;
+  const x = cx - totalW / 2;
+  menuButton(ctx, state, "start", "게임하기", x, y, halfW, buttonH, fontSize);
+  menuButton(ctx, state, "hall", "명예의 전당", x + halfW + gap, y, halfW, buttonH, fontSize);
+  menuButton(ctx, state, "support", "데미안 지원하기", x, y + buttonH + 12, totalW, buttonH, fontSize);
 }
 
 function drawMenuMotivation(ctx, state, x, y, view) {
@@ -377,6 +388,26 @@ function button(ctx, state, action, text, x, y, w, h) {
   drawButtonCaps(ctx, x, y, w, h);
   drawButtonDiamond(ctx, x + w / 2, y + h - 2, h > 60 ? 15 : 11);
   title(ctx, text, x + w / 2, y + h / 2 + 2, h > 60 ? 31 : 23);
+  ctx.restore();
+}
+
+function menuButton(ctx, state, action, text, x, y, w, h, fontSize) {
+  state.buttons.push({ action, x, y, w, h });
+  const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+  grad.addColorStop(0, action === "support" ? "#10b7dd" : "#10c8ff");
+  grad.addColorStop(0.48, action === "support" ? "#087ba6" : "#0866bc");
+  grad.addColorStop(1, "#021f58");
+  ctx.save();
+  ctx.shadowColor = "rgba(56, 232, 255, 0.68)";
+  ctx.shadowBlur = 16;
+  roundRect(ctx, x, y, w, h, 10, grad, "#66f1ff");
+  ctx.shadowBlur = 0;
+  roundRect(ctx, x + 5, y + 5, w - 10, h - 10, 7, "rgba(2, 25, 72, 0.28)", "rgba(160, 252, 255, 0.45)");
+  ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+  roundRect(ctx, x + 14, y + 9, w - 28, Math.max(8, h * 0.15), 5, "rgba(255,255,255,0.14)", "rgba(255,255,255,0.04)");
+  drawButtonCaps(ctx, x, y, w, h);
+  drawButtonDiamond(ctx, x + w / 2, y + h - 2, 11);
+  title(ctx, text, x + w / 2, y + h / 2 + 1, fontSize);
   ctx.restore();
 }
 

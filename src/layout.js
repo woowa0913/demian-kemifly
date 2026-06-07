@@ -26,10 +26,21 @@ export function applyCanvasLayout(canvas, state) {
   if (canvas.width !== view.width) canvas.width = view.width;
   if (canvas.height !== view.height) canvas.height = view.height;
   canvas.style.setProperty("--canvas-ratio", String(view.width / view.height));
+  fitCanvasToViewport(canvas, view);
   if (!state.view) state.view = view;
   else if (state.view.width !== view.width || state.view.height !== view.height) setView(state, view);
 }
 
 export function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function fitCanvasToViewport(canvas, view) {
+  const narrowLandscape = !view.portrait && window.innerHeight <= 520;
+  const margin = narrowLandscape ? 8 : view.portrait ? 18 : 20;
+  const maxWidth = Math.max(1, window.innerWidth - margin * 2);
+  const maxHeight = Math.max(1, window.innerHeight - margin * 2);
+  const scale = Math.min(maxWidth / view.width, maxHeight / view.height);
+  canvas.style.width = `${Math.floor(view.width * scale)}px`;
+  canvas.style.height = `${Math.floor(view.height * scale)}px`;
 }

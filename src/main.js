@@ -14,6 +14,8 @@ const state = createGameState();
 const audio = createAudio();
 let assets = null;
 let lastTime = performance.now();
+let pointerHeld = false;
+let pointerHoldTimer = 0;
 
 bootstrap();
 
@@ -32,6 +34,7 @@ function loop(now) {
   const dt = Math.min(0.05, (now - lastTime) / 1000);
   lastTime = now;
   state.clock += dt;
+  updateHeldPointer(dt);
   updateState(state, dt);
   playQueuedAudio();
   render(ctx, state, assets);
@@ -41,7 +44,10 @@ function loop(now) {
 
 function bindInput() {
   window.addEventListener("keydown", handleKeyDown);
-  canvas.addEventListener("pointerdown", handlePointer);
+  canvas.addEventListener("pointerdown", handlePointerDown);
+  canvas.addEventListener("pointerup", releasePointer);
+  canvas.addEventListener("pointercancel", releasePointer);
+  canvas.addEventListener("pointerleave", releasePointer);
   window.addEventListener("resize", handleResize);
   window.addEventListener("orientationchange", handleResize);
   nameInput.addEventListener("keydown", handleNameKey);
@@ -88,15 +94,40 @@ function handleNameCommit(event) {
   syncNameInput();
 }
 
-function handlePointer(event) {
+function handlePointerDown(event) {
+  event.preventDefault();
   audio.unlock();
   const point = toCanvasPoint(event);
   const button = state.buttons.find((item) => isInside(point, item));
   if (button) {
+    releasePointer();
     performAction(button.action);
     return;
   }
-  if (state.mode === "playing" || state.mode === "menu") flap(state);
+  if (state.mode === "playing" || state.mode === "menu") {
+    flap(state);
+    if (state.mode === "playing") {
+      pointerHeld = true;
+      pointerHoldTimer = 0.16;
+      if (event.pointerId !== undefined) canvas.setPointerCapture(event.pointerId);
+    }
+  }
+}
+
+function releasePointer(event) {
+  pointerHeld = false;
+  pointerHoldTimer = 0;
+  if (event?.pointerId !== undefined && canvas.hasPointerCapture?.(event.pointerId)) {
+    canvas.releasePointerCapture(event.pointerId);
+  }
+}
+
+function updateHeldPointer(dt) {
+  if (!pointerHeld || state.mode !== "playing") return;
+  pointerHoldTimer -= dt;
+  if (pointerHoldTimer > 0) return;
+  flap(state);
+  pointerHoldTimer = 0.14;
 }
 
 function handleEnter() {

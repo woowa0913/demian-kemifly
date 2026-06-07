@@ -164,15 +164,16 @@ function getLevelPerkText(level) {
 }
 
 function drawMomentBanner(ctx, x, y, titleText, detail, color, alpha) {
-  const w = Math.min(410, ctx.canvas.width - 54);
+  const w = Math.min(340, ctx.canvas.width - 64);
+  const h = 46;
   ctx.save();
-  ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+  ctx.globalAlpha = Math.max(0, Math.min(0.62, alpha * 0.72));
   ctx.shadowColor = color;
-  ctx.shadowBlur = 20;
-  roundRect(ctx, x - w / 2, y - 30, w, 60, 10, "rgba(4, 18, 42, 0.72)", color);
+  ctx.shadowBlur = 10;
+  roundRect(ctx, x - w / 2, y - h / 2, w, h, 8, "rgba(4, 18, 42, 0.38)", color);
   ctx.shadowBlur = 0;
-  label(ctx, titleText, x, y - 8, 20, "#ffffff", "900", "center");
-  label(ctx, detail, x, y + 15, 12, color, "900", "center");
+  label(ctx, titleText, x, y - 6, 16, "#ffffff", "900", "center");
+  label(ctx, detail, x, y + 12, 10, color, "900", "center");
   ctx.restore();
 }
 
@@ -191,8 +192,8 @@ function drawMenu(ctx, state, assets) {
   const cx = view.width / 2;
   drawScrim(ctx, 0.32);
   const logoY = view.portrait ? 132 : 104;
-  const birdY = view.portrait ? 318 : 276;
-  const startY = view.portrait ? 512 : 300;
+  const birdY = view.portrait ? 318 : 272;
+  const startY = view.portrait ? 512 : 336;
   drawMenuKemi(ctx, state, assets, cx, birdY, view);
   drawImageCentered(ctx, assets.logo, cx, logoY, view.portrait ? 330 : 300, view.portrait ? 174 : 158);
   label(ctx, "케미의 첫 비행", cx, view.portrait ? 236 : 196, view.portrait ? 25 : 23, "#8cf6ff", "800", "center");
@@ -218,11 +219,11 @@ function drawMenuMotivation(ctx, state, x, y, view) {
   const best = state.leaderboard[0]?.score || 0;
   const line = getMenuLine(state);
   const target = best > 0 ? `최고 기록 ${best} · 다음 목표 ${best + 800}` : "첫 기록을 명예의 전당에 남겨봐요";
-  const hint = view.portrait ? "TAP" : "SPACE/TAP";
+  const hint = view.portrait ? "모바일: 터치" : "웹: SPACE/클릭 · 모바일: 터치";
   const w = view.portrait ? Math.min(330, view.width - 70) : 390;
   drawPanel(ctx, x - w / 2, y, w, 44, 0.34);
   label(ctx, line, x, y + 15, view.portrait ? 14 : 15, "#ffffff", "900", "center");
-  label(ctx, `${target} · ${hint}`, x, y + 32, 12, "#9af7ff", "800", "center");
+  label(ctx, `${target} · ${hint}`, x, y + 32, 11, "#9af7ff", "800", "center");
 }
 
 function getMenuLine(state) {

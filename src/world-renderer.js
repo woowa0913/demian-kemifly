@@ -74,23 +74,24 @@ function drawBackground(ctx, image, time, mode, view, lava) {
     drawMenuBackground(ctx, image, time, view);
     return;
   }
-  const speed = mode === "playing" ? (lava ? 28 : 18) : 6;
-  const offset = (time * speed + view.width * 0.34) % (view.width * 2);
-  if (view.portrait) drawPortraitBackground(ctx, image, time, view, lava, 1);
-  else drawCoverTile(ctx, image, 0, 0, view.width, view.height, false);
-  ctx.save();
-  ctx.globalAlpha = view.portrait ? 0.2 : 0.34;
-  for (let i = 0; i < (view.portrait ? 3 : 4); i += 1) {
-    if (view.portrait) drawPortraitBackground(ctx, image, time + i * 7, view, lava, i % 2 === 1 ? 0.55 : 0.75);
-    else drawCoverTile(ctx, image, -offset + i * view.width, 0, view.width, view.height, i % 2 === 1);
-  }
-  ctx.restore();
+  drawScrollingBackground(ctx, image, time, mode, view, lava);
   drawDrift(ctx, time, mode, view, lava);
   const gradient = ctx.createLinearGradient(0, 0, 0, view.height);
   gradient.addColorStop(0, lava ? "rgba(70, 8, 10, 0.18)" : "rgba(4, 20, 50, 0.1)");
   gradient.addColorStop(1, lava ? "rgba(28, 5, 10, 0.38)" : "rgba(2, 25, 44, 0.22)");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, view.width, view.height);
+}
+
+function drawScrollingBackground(ctx, image, time, mode, view, lava) {
+  const speed = mode === "playing" ? (lava ? 18 : 10) : 3;
+  const width = view.width * (view.portrait ? 1.44 : 1.18);
+  const height = view.height * (view.portrait ? 1.12 : 1.1);
+  const xOffset = (time * speed) % width;
+  const y = (view.height - height) / 2 + Math.sin(time * 0.07) * view.height * 0.01;
+  for (let i = -1; i <= 1; i += 1) {
+    drawCoverTile(ctx, image, i * width - xOffset, y, width, height, i % 2 !== 0);
+  }
 }
 
 function drawMenuBackground(ctx, image, time, view) {
@@ -164,13 +165,14 @@ function drawMenuSparkles(ctx, time, view) {
 }
 
 function drawDrift(ctx, time, mode, view, lava) {
-  const speed = mode === "playing" ? 220 : 34;
+  const speed = mode === "playing" ? 180 : 34;
+  const count = mode === "playing" ? 22 : 34;
   ctx.save();
-  for (let i = 0; i < 34; i += 1) {
+  for (let i = 0; i < count; i += 1) {
     const baseY = 34 + ((i * 73) % Math.max(1, view.height - 72));
     const x = (view.width + 120 - ((time * speed + i * 151) % (view.width + 240)));
     const len = 24 + ((i * 17) % 56);
-    const alpha = mode === "playing" ? 0.16 : 0.06;
+    const alpha = mode === "playing" ? 0.08 : 0.06;
     ctx.strokeStyle = lava ? `rgba(255, 185, 96, ${alpha + 0.05})` : `rgba(166, 246, 255, ${alpha})`;
     ctx.lineWidth = 1 + (i % 3);
     ctx.beginPath();

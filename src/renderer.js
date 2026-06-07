@@ -338,8 +338,8 @@ function drawHall(ctx, state, assets) {
     label(ctx, `${index + 1}`, panel.x + 34, y, 16, "#ffd76b", "900", "center");
     drawImageFit(ctx, assets[getHallAvatarKey(tier.level)] || assets.happy, panel.x + 72, y, panel.avatar, panel.avatar);
     if (panel.compact) {
-      label(ctx, trimText(ctx, entry.name, 170, "900", 15), panel.x + 104, y - 7, 15, "#ffffff", "900");
-      label(ctx, trimText(ctx, `LV ${tier.level} · ${entry.title}`, 250, "800", 11), panel.x + 104, y + 10, 11, tier.color, "800");
+      label(ctx, trimText(ctx, entry.name, 170, "900", 15), panel.x + 104, y, 15, "#ffffff", "900");
+      label(ctx, trimText(ctx, `LV ${tier.level} · ${entry.title}`, 206, "800", 13), panel.x + 300, y, 13, tier.color, "800");
     } else {
       label(ctx, entry.name, panel.x + 104, y - 7, 16, "#ffffff", "900");
       label(ctx, `LV ${tier.level} · ${entry.title}`, panel.x + 104, y + 11, 12, tier.color, "800");

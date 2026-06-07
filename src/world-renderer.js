@@ -87,11 +87,12 @@ function drawScrollingBackground(ctx, image, time, mode, view, lava) {
   const speed = mode === "playing" ? (lava ? 18 : 10) : 3;
   const width = Math.ceil(view.width * (view.portrait ? 1.44 : 1.18));
   const height = Math.ceil(view.height * (view.portrait ? 1.12 : 1.1));
+  const overlap = 8;
   const xOffset = (time * speed) % width;
   const y = Math.round((view.height - height) / 2 + Math.sin(time * 0.07) * view.height * 0.01);
   for (let i = -1; i <= 2; i += 1) {
-    const x = Math.floor(i * width - xOffset) - 2;
-    drawCoverTile(ctx, image, x, y, width + 4, height, false);
+    const x = Math.floor(i * width - xOffset) - overlap / 2;
+    drawCoverTile(ctx, image, x, y, width + overlap, height, i % 2 !== 0);
   }
 }
 

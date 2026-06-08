@@ -22,7 +22,7 @@ export function playerX(view) {
 
 export function applyCanvasLayout(canvas, state) {
   const portrait = window.innerHeight > window.innerWidth * 1.12;
-  const view = portrait ? { width: 540, height: 960, portrait: true } : { width: 960, height: 540, portrait: false };
+  const view = portrait ? { width: 540, height: 960, portrait: true } : createLandscapeView();
   if (canvas.width !== view.width) canvas.width = view.width;
   if (canvas.height !== view.height) canvas.height = view.height;
   canvas.style.setProperty("--canvas-ratio", String(view.width / view.height));
@@ -31,13 +31,19 @@ export function applyCanvasLayout(canvas, state) {
   else if (state.view.width !== view.width || state.view.height !== view.height) setView(state, view);
 }
 
+function createLandscapeView() {
+  const aspect = Math.max(16 / 9, window.innerWidth / Math.max(1, window.innerHeight));
+  const width = Math.round(clamp(GAME.height * aspect, GAME.width, 1280));
+  return { width, height: GAME.height, portrait: false };
+}
+
 export function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
 function fitCanvasToViewport(canvas, view) {
   const narrowLandscape = !view.portrait && window.innerHeight <= 520;
-  const margin = narrowLandscape ? 8 : view.portrait ? 18 : 20;
+  const margin = narrowLandscape ? 4 : view.portrait ? 18 : 6;
   const maxWidth = Math.max(1, window.innerWidth - margin * 2);
   const maxHeight = Math.max(1, window.innerHeight - margin * 2);
   const scale = Math.min(maxWidth / view.width, maxHeight / view.height);

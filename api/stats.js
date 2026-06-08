@@ -25,15 +25,14 @@ export default async function handler(req, res) {
     return;
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    res.status(503).json({ error: "통계 저장소가 아직 설정되지 않았습니다." });
-    return;
-  }
-
   try {
     if (req.method === "GET") {
       if (!isAuthorized(req)) {
         res.status(401).json({ error: "통계 조회 권한이 없습니다." });
+        return;
+      }
+      if (!hasBlobToken()) {
+        res.status(503).json({ error: "통계 저장소가 아직 설정되지 않았습니다." });
         return;
       }
       const stats = await readStats();
@@ -41,6 +40,10 @@ export default async function handler(req, res) {
       return;
     }
 
+    if (!hasBlobToken()) {
+      res.status(503).json({ error: "통계 저장소가 아직 설정되지 않았습니다." });
+      return;
+    }
     const stats = await readStats();
     const event = normalizeEvent(await readJsonBody(req));
     if (!event) {
@@ -54,6 +57,10 @@ export default async function handler(req, res) {
   } catch (error) {
     res.status(error.statusCode || 500).json({ error: "통계 처리 중 문제가 발생했습니다." });
   }
+}
+
+function hasBlobToken() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
 function isAuthorized(req) {

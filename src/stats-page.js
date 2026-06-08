@@ -30,6 +30,10 @@ async function loadStats(adminKey) {
       statusEl.textContent = "관리자 키가 올바르지 않습니다.";
       return;
     }
+    if (response.status === 503) {
+      statusEl.textContent = "Vercel 환경변수 BLOB_READ_WRITE_TOKEN이 필요합니다.";
+      return;
+    }
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
     authForm.hidden = true;

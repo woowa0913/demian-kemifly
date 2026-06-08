@@ -6,6 +6,7 @@ import { applyCanvasLayout, getView } from "./layout.js";
 import { render } from "./renderer.js";
 import { hasValidName, saveScoreRemote, syncLeaderboardFromServer } from "./storage.js";
 import { renderGameToText } from "./text-state.js";
+import { trackStatsEvent, trackVisitOnce } from "./analytics.js";
 
 const canvas = document.querySelector("#game");
 const nameInput = document.querySelector("#nameInput");
@@ -27,6 +28,7 @@ async function bootstrap() {
   exposeTestHooks();
   render(ctx, state, assets);
   syncRemoteLeaderboard();
+  trackVisitOnce();
   requestAnimationFrame(loop);
 }
 
@@ -104,13 +106,13 @@ function handlePointerDown(event) {
     performAction(button.action);
     return;
   }
-  if (state.mode === "playing" || state.mode === "menu") {
+  if (state.mode === "menu") {
+    startRunTracked();
+  } else if (state.mode === "playing") {
     flap(state);
-    if (state.mode === "playing") {
-      pointerHeld = true;
-      pointerHoldTimer = 0.16;
-      if (event.pointerId !== undefined) canvas.setPointerCapture(event.pointerId);
-    }
+    pointerHeld = true;
+    pointerHoldTimer = 0.16;
+    if (event.pointerId !== undefined) canvas.setPointerCapture(event.pointerId);
   }
 }
 
@@ -131,14 +133,14 @@ function updateHeldPointer(dt) {
 }
 
 function handleEnter() {
-  if (state.mode === "menu" || state.mode === "hall") startRun(state);
+  if (state.mode === "menu" || state.mode === "hall") startRunTracked();
   else if (state.mode === "gameover" && state.isRecord && !state.saved) handleRecordSubmit();
-  else if (state.mode === "gameover") startRun(state);
+  else if (state.mode === "gameover") startRunTracked();
   else if (state.mode === "paused") togglePause(state);
 }
 
 function performAction(action) {
-  if (action === "start" || action === "restart") startRun(state);
+  if (action === "start" || action === "restart") startRunTracked();
   else if (action === "resume") togglePause(state);
   else if (action === "pause") togglePause(state);
   else if (action === "hall") showHall(state);
@@ -148,6 +150,11 @@ function performAction(action) {
   else if (action === "sound") state.soundMuted = audio.toggleMute();
   if (action !== "sound") audio.play("button");
   syncNameInput();
+}
+
+function startRunTracked() {
+  startRun(state);
+  trackStatsEvent("start");
 }
 
 function openSupportPage() {
@@ -170,6 +177,7 @@ function handleRecordSubmit() {
   };
   const accepted = submitRecord(state, name);
   if (!accepted) return;
+  trackStatsEvent("record");
   saveScoreRemote(name, stats).then((leaderboard) => {
     state.leaderboard = leaderboard;
     render(ctx, state, assets);

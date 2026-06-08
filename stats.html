@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; media-src 'self'; style-src 'self'; script-src 'self'; worker-src 'self'; manifest-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'"
+    />
+    <title>KEMI FLY 통계</title>
+    <meta name="theme-color" content="#061d3f" />
+    <link rel="stylesheet" href="./src/stats.css" />
+  </head>
+  <body>
+    <main class="stats-shell">
+      <div class="topbar">
+        <div>
+          <h1>접속 통계</h1>
+          <p id="status">통계를 불러오는 중입니다.</p>
+        </div>
+        <a class="back-link" href="./">게임으로 돌아가기</a>
+      </div>
+      <form id="authForm" class="auth-form">
+        <input id="adminKey" type="password" autocomplete="current-password" placeholder="관리자 키" aria-label="관리자 키" />
+        <button type="submit">확인</button>
+      </form>
+      <div id="statsContent" hidden>
+        <section id="summary" class="summary" aria-label="누적 통계"></section>
+        <section class="table-wrap" aria-label="날짜별 통계">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">날짜</th>
+                <th scope="col">접속</th>
+                <th scope="col">게임 시작</th>
+                <th scope="col">기록 저장</th>
+              </tr>
+            </thead>
+            <tbody id="statsRows"></tbody>
+          </table>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="./src/stats-page.js"></script>
+  </body>
+</html>

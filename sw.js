@@ -1,10 +1,13 @@
-const CACHE_NAME = "kemi-fly-v23";
+const CACHE_NAME = "kemi-fly-v24";
 const CORE_ASSETS = [
   "./",
   "./index.html",
+  "./stats.html",
   "./manifest.webmanifest",
   "./src/styles.css",
+  "./src/stats.css",
   "./src/main.js",
+  "./src/analytics.js",
   "./src/config.js",
   "./src/assets.js",
   "./src/audio.js",
@@ -18,6 +21,7 @@ const CORE_ASSETS = [
   "./src/storage.js",
   "./src/text-state.js",
   "./src/world-renderer.js",
+  "./src/stats-page.js",
   "./assets/bgm-running-past-clouds.mp3",
   "./assets/sfx/01-flap-wing-pop.wav",
   "./assets/sfx/02-crystal-collect-blue.wav",

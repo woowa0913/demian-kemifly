@@ -43,6 +43,7 @@ npm run dev
 - 먹는 아이템은 밝은 보상 아이콘과 초록/금색 `+` 링, 장애물은 돌/보라/용암 계열과 붉은 `!` 표시로 구분
 - 브라우저 localStorage 기반 명예의 전당 Top 10
 - Vercel 배포 시 Vercel Blob 기반 명예의 전당 Top 10 영속 저장
+- Vercel 배포 시 Vercel Blob 기반 날짜별 익명 통계 저장: 접속, 게임 시작, 기록 저장 수
 - `manifest.webmanifest`와 서비스 워커 기반 설치형 웹앱 준비
 - Playwright 검증용 `window.render_game_to_text`, `window.advanceTime(ms)` 제공
 
@@ -53,15 +54,22 @@ npm run dev
 - 입력 이름은 클라이언트에서 길이와 문자 범위를 제한하고, 화면 출력 시 DOM 삽입 대신 Canvas 텍스트로만 렌더링합니다.
 - 데미안 지원 링크는 사용자가 직접 누른 경우에만 새 창으로 열며, 열린 창이 게임 페이지를 제어하지 못하도록 차단합니다.
 - 명예의 전당 기록은 서버 API에서 다시 검증한 뒤 Vercel Blob에 저장합니다.
+- 접속 통계는 `/api/stats`에서 날짜별 집계 숫자만 저장하며 IP, 쿠키, User-Agent, Referrer, 이름을 저장하지 않습니다.
 - Blob 저장소가 준비되지 않은 로컬 개발 환경에서는 기존 localStorage로 자동 폴백합니다.
 - 개발 서버는 `127.0.0.1`에만 바인딩합니다.
 - 배포 시 `BLOB_READ_WRITE_TOKEN`은 Vercel 환경변수로만 설정하고 저장소에 커밋하지 않습니다.
 
+## 통계 확인
+
+배포 후 `https://배포도메인/stats.html`에서 관리자 키 입력 후 최근 120일의 날짜별 접속, 게임 시작, 기록 저장 수를 확인할 수 있습니다.
+로컬 개발 환경에서는 개인정보 없는 원격 통계 전송을 막기 위해 통계 이벤트를 보내지 않습니다.
+
 ## 배포 준비
 
 1. Vercel 프로젝트에 Blob Store를 연결합니다.
-2. Vercel 환경변수 `BLOB_READ_WRITE_TOKEN`을 설정합니다.
-3. GitHub 저장소와 Vercel 프로젝트를 연결한 뒤 Preview 배포부터 검증합니다.
+2. Vercel 환경변수 `BLOB_READ_WRITE_TOKEN`을 설정합니다. 명예의 전당과 익명 통계가 같은 토큰을 사용합니다.
+3. Vercel 환경변수 `STATS_ADMIN_KEY`를 긴 랜덤 값으로 설정합니다. 이 값이 있어야 `/stats.html` 통계를 볼 수 있습니다.
+4. GitHub 저장소와 Vercel 프로젝트를 연결한 뒤 Preview 배포부터 검증합니다.
 
 ## 오픈소스 라이선스
 
